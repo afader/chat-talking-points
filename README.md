@@ -6,6 +6,7 @@ Check out the most recent demo here: [http://afader.github.io/cheeseburger-textc
 To run locally:
     
     git clone http://afader.github.io/cheeseburger-textcomplete
+    cd cheeseburger-textcomplete
     npm install
     gulp
     
