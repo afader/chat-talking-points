@@ -5,6 +5,7 @@ var path = require('path');
 var webpack = require("webpack");
 var WebpackDevServer = require("webpack-dev-server");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var ghPages = require('gulp-gh-pages');
 
 gulp.task('default', ['build']);
 
@@ -64,3 +65,8 @@ gulp.task('webpack-dev-server', function(callback) {
 });
 
 gulp.task('default', ['webpack-dev-server']);
+
+gulp.task('ghPages', ['webpack'], function() {
+  return gulp.src('./build/**/*')
+    .pipe(ghPages());
+});
