@@ -10,7 +10,10 @@ var ChatInput = React.createClass({
   },
   handleSubmit: function(e) {
     e.preventDefault();
-    this.props.send(this.state.value);
+    var message = this.state.value.trim();
+    if (message) {
+      this.props.send(this.state.value);
+    }
     this.setState({value: ''});
   },
   handleEnter: function(e) {

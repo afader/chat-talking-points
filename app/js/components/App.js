@@ -11,7 +11,7 @@ var App = React.createClass({
     return (
       <Grid>
 	<Row>
-	  <Col md={4}>
+	  <Col md={6}>
 	    <ChatContainer/>
 	  </Col>
 	  <Col md={4}>
