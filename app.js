@@ -91,7 +91,7 @@
 
 
 	// module
-	exports.push([module.id, ".chatContainer {\n  display: flex;\n  flex-flow: column;\n  height: 100vh;\n}\n\n.chatMessages {\n  flex: 2;\n  overflow-y: scroll;\n  border: 1px solid #e3e3e3;\n  border-radius: 4px;\n  margin-bottom: 5px;\n}\n\n.chatMessage {\n  clear: both;\n  float: right;\n  background-color: #eef;\n  padding: 8px;\n  margin: 10px;\n  max-width: 80%;\n  position: relative;\n}\n\n/* For the speech bubble thingy. */\n.chatMessage:after {\n  left: 100%;\n  bottom: 8px;\n  border: solid transparent;\n  content: \" \";\n  height: 0;\n  width: 0;\n  position: absolute;\n  pointer-events: none;\n  border-color: rgba(0, 122, 255, 0);\n  border-left-color: #eef;\n  border-width: 5px;\n  margin-top: -5px;\n}\n\n.chatInput {\n  min-height: 50px;\n  margin-bottom: 5px;\n}\n\n.sendButton {\n  resize: none;\n}\n", ""]);
+	exports.push([module.id, ".chatContainer {\n  display: flex;\n  flex-flow: column;\n  height: 80vh;\n}\n\n.chatMessages {\n  flex: 2;\n  overflow-y: scroll;\n  border: 1px solid #e3e3e3;\n  border-radius: 4px;\n  margin-bottom: 5px;\n}\n\n.chatMessage {\n  clear: both;\n  float: right;\n  background-color: #eef;\n  padding: 8px;\n  margin: 10px;\n  max-width: 80%;\n  position: relative;\n}\n\n/* For the speech bubble thingy. */\n.chatMessage:after {\n  left: 100%;\n  bottom: 8px;\n  border: solid transparent;\n  content: \" \";\n  height: 0;\n  width: 0;\n  position: absolute;\n  pointer-events: none;\n  border-color: rgba(0, 122, 255, 0);\n  border-left-color: #eef;\n  border-width: 5px;\n  margin-top: -5px;\n}\n\n.chatInput {\n  min-height: 50px;\n  margin-bottom: 5px;\n}\n\n.sendButton {\n  resize: none;\n}\n\n#chatContextMenu {\n  position: absolute;\n  display: none;\n  background-color: red;\n}\n", ""]);
 
 	// exports
 
@@ -9673,14 +9673,14 @@
 	var Row = Bootstrap.Row;
 	var Grid = Bootstrap.Grid;
 	var ChatContainer = __webpack_require__(313);
-	var FactorContainer = __webpack_require__(325);
+	var FactorContainer = __webpack_require__(332);
 
 	var App = React.createClass({displayName: "App",
 	  render: function() {
 	    return (
 	      React.createElement(Grid, null, 
 		React.createElement(Row, null, 
-		  React.createElement(Col, {md: 4}, 
+		  React.createElement(Col, {md: 6}, 
 		    React.createElement(ChatContainer, null)
 		  ), 
 		  React.createElement(Col, {md: 4}, 
@@ -41402,10 +41402,11 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
-	var ChatInput = __webpack_require__(314);
-	var ChatMessages = __webpack_require__(315);
-	var chatStore = __webpack_require__(317);
-	var chatActions = __webpack_require__(324);
+	var ChatInput = __webpack_require__(322);
+	var ChatMessages = __webpack_require__(328);
+	var ChatContextMenu = __webpack_require__(314);
+	var chatStore = __webpack_require__(330);
+	var chatActions = __webpack_require__(331);
 
 	var ChatContainer = React.createClass({displayName: "ChatContainer",
 	  getInitialState: function() {
@@ -41432,7 +41433,8 @@
 	      React.createElement("div", {className: "chatContainer"}, 
 		React.createElement("h3", null, "Chat Room"), 
 		React.createElement(ChatMessages, {messages: this.state.messages}), 
-		React.createElement(ChatInput, {send: this.handleSendMessage})
+		React.createElement(ChatInput, {send: this.handleSendMessage}), 
+		React.createElement(ChatContextMenu, null)
 	      )
 	    );
 	  }
@@ -41447,6 +41449,572 @@
 
 	var React = __webpack_require__(14);
 	var Bootstrap = __webpack_require__(170);
+	var context = __webpack_require__(315);
+	var factorActions = __webpack_require__(316);
+	var selectedTextToFactor = function(e) {
+	  if (e) {
+	    e.preventDefault();
+	  }
+	  if (window.getSelection) {
+	    var text = window.getSelection().toString();
+	    factorActions.addFactor(text);
+	  }
+	};
+	var ChatContextMenu = React.createClass({displayName: "ChatContextMenu",
+	  componentDidMount: function() {
+	    context.init({fadeSpeed: 0});
+	    context.attach('.chatMessage', [{
+	      text: 'Add to Factors',
+	      action: selectedTextToFactor
+	    }]);
+	  },
+	  render: function() {
+	    return null;
+	  }
+	});
+	module.exports = ChatContextMenu;
+
+
+/***/ },
+/* 315 */
+/***/ function(module, exports) {
+
+	/* 
+	 * Context.js
+	 * Copyright Jacob Kelley
+	 * MIT License
+	 */
+
+	    
+		var options = {
+			fadeSpeed: 100,
+			filter: function ($obj) {
+				// Modify $obj, Do not return
+			},
+			above: 'auto',
+			preventDoubleContext: true,
+			compress: false
+		};
+
+		function initialize(opts) {
+			
+			options = $.extend({}, options, opts);
+			
+			$(document).on('click', 'html', function () {
+				$('.dropdown-context').fadeOut(options.fadeSpeed, function(){
+					$('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+				});
+			});
+			if(options.preventDoubleContext){
+				$(document).on('contextmenu', '.dropdown-context', function (e) {
+					e.preventDefault();
+				});
+			}
+			$(document).on('mouseenter', '.dropdown-submenu', function(){
+				var $sub = $(this).find('.dropdown-context-sub:first'),
+					subWidth = $sub.width(),
+					subLeft = $sub.offset().left,
+					collision = (subWidth+subLeft) > window.innerWidth;
+				if(collision){
+					$sub.addClass('drop-left');
+				}
+			});
+			
+		}
+
+		function updateOptions(opts){
+			options = $.extend({}, options, opts);
+		}
+
+		function buildMenu(data, id, subMenu) {
+			var subClass = (subMenu) ? ' dropdown-context-sub' : '',
+				compressed = options.compress ? ' compressed-context' : '',
+				$menu = $('<ul class="dropdown-menu dropdown-context' + subClass + compressed+'" id="dropdown-' + id + '"></ul>');
+	        var i = 0, linkTarget = '';
+	        for(i; i<data.length; i++) {
+	        	if (typeof data[i].divider !== 'undefined') {
+					$menu.append('<li class="divider"></li>');
+				} else if (typeof data[i].header !== 'undefined') {
+					$menu.append('<li class="nav-header">' + data[i].header + '</li>');
+				} else {
+					if (typeof data[i].href == 'undefined') {
+						data[i].href = '#';
+					}
+					if (typeof data[i].target !== 'undefined') {
+						linkTarget = ' target="'+data[i].target+'"';
+					}
+					if (typeof data[i].subMenu !== 'undefined') {
+						$sub = ('<li class="dropdown-submenu"><a tabindex="-1" href="' + data[i].href + '">' + data[i].text + '</a></li>');
+					} else {
+						$sub = $('<li><a tabindex="-1" href="' + data[i].href + '"'+linkTarget+'>' + data[i].text + '</a></li>');
+					}
+					if (typeof data[i].action !== 'undefined') {
+						var actiond = new Date(),
+							actionID = 'event-' + actiond.getTime() * Math.floor(Math.random()*100000),
+							eventAction = data[i].action;
+						$sub.find('a').attr('id', actionID);
+						$('#' + actionID).addClass('context-event');
+						$(document).on('click', '#' + actionID, eventAction);
+					}
+					$menu.append($sub);
+					if (typeof data[i].subMenu != 'undefined') {
+						var subMenuData = buildMenu(data[i].subMenu, id, true);
+						$menu.find('li:last').append(subMenuData);
+					}
+				}
+				if (typeof options.filter == 'function') {
+					options.filter($menu.find('li:last'));
+				}
+			}
+			return $menu;
+		}
+
+		function addContext(selector, data) {
+			
+			var d = new Date(),
+				id = d.getTime(),
+				$menu = buildMenu(data, id);
+				
+			$('body').append($menu);
+			
+			
+			$(document).on('contextmenu', selector, function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				$('.dropdown-context:not(.dropdown-context-sub)').hide();
+				
+				$dd = $('#dropdown-' + id);
+				if (typeof options.above == 'boolean' && options.above) {
+					$dd.addClass('dropdown-context-up').css({
+						top: e.pageY - 20 - $('#dropdown-' + id).height(),
+						left: e.pageX - 13
+					}).fadeIn(options.fadeSpeed);
+				} else if (typeof options.above == 'string' && options.above == 'auto') {
+					$dd.removeClass('dropdown-context-up');
+					var autoH = $dd.height() + 12;
+					if ((e.pageY + autoH) > $('html').height()) {
+						$dd.addClass('dropdown-context-up').css({
+							top: e.pageY - 20 - autoH,
+							left: e.pageX - 13
+						}).fadeIn(options.fadeSpeed);
+					} else {
+						$dd.css({
+							top: e.pageY + 10,
+							left: e.pageX - 13
+						}).fadeIn(options.fadeSpeed);
+					}
+				}
+			});
+		}
+		
+		function destroyContext(selector) {
+			$(document).off('contextmenu', selector).off('click', '.context-event');
+		}
+		
+	var result = {
+			init: initialize,
+			settings: updateOptions,
+			attach: addContext,
+			destroy: destroyContext
+		};
+
+	module.exports = result;
+
+
+/***/ },
+/* 316 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var AppDispatcher = __webpack_require__(317);
+	var appConstants = __webpack_require__(321);
+
+	var factorActions = {
+	  addFactor: function(factor) {
+	    AppDispatcher.handleAction({
+	      actionType: appConstants.ADD_FACTOR,
+	      data: factor
+	    });
+	  },
+	  removeFactor: function(index) {
+	    AppDispatcher.handleAction({
+	      actionType: appConstants.REMOVE_FACTOR,
+	      data: index
+	    });
+	  }
+	};
+
+	module.exports = factorActions;
+
+
+/***/ },
+/* 317 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Dispatcher = __webpack_require__(318).Dispatcher;
+	var AppDispatcher = new Dispatcher();
+
+	AppDispatcher.handleAction = function(action) {
+	  this.dispatch({
+	    source: 'VIEW_ACTION',
+	    action: action
+	  });
+	};
+
+	module.exports = AppDispatcher;
+
+
+/***/ },
+/* 318 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright (c) 2014-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 */
+
+	module.exports.Dispatcher = __webpack_require__(319)
+
+
+/***/ },
+/* 319 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+	 * Copyright (c) 2014, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule Dispatcher
+	 * @typechecks
+	 */
+
+	"use strict";
+
+	var invariant = __webpack_require__(320);
+
+	var _lastID = 1;
+	var _prefix = 'ID_';
+
+	/**
+	 * Dispatcher is used to broadcast payloads to registered callbacks. This is
+	 * different from generic pub-sub systems in two ways:
+	 *
+	 *   1) Callbacks are not subscribed to particular events. Every payload is
+	 *      dispatched to every registered callback.
+	 *   2) Callbacks can be deferred in whole or part until other callbacks have
+	 *      been executed.
+	 *
+	 * For example, consider this hypothetical flight destination form, which
+	 * selects a default city when a country is selected:
+	 *
+	 *   var flightDispatcher = new Dispatcher();
+	 *
+	 *   // Keeps track of which country is selected
+	 *   var CountryStore = {country: null};
+	 *
+	 *   // Keeps track of which city is selected
+	 *   var CityStore = {city: null};
+	 *
+	 *   // Keeps track of the base flight price of the selected city
+	 *   var FlightPriceStore = {price: null}
+	 *
+	 * When a user changes the selected city, we dispatch the payload:
+	 *
+	 *   flightDispatcher.dispatch({
+	 *     actionType: 'city-update',
+	 *     selectedCity: 'paris'
+	 *   });
+	 *
+	 * This payload is digested by `CityStore`:
+	 *
+	 *   flightDispatcher.register(function(payload) {
+	 *     if (payload.actionType === 'city-update') {
+	 *       CityStore.city = payload.selectedCity;
+	 *     }
+	 *   });
+	 *
+	 * When the user selects a country, we dispatch the payload:
+	 *
+	 *   flightDispatcher.dispatch({
+	 *     actionType: 'country-update',
+	 *     selectedCountry: 'australia'
+	 *   });
+	 *
+	 * This payload is digested by both stores:
+	 *
+	 *    CountryStore.dispatchToken = flightDispatcher.register(function(payload) {
+	 *     if (payload.actionType === 'country-update') {
+	 *       CountryStore.country = payload.selectedCountry;
+	 *     }
+	 *   });
+	 *
+	 * When the callback to update `CountryStore` is registered, we save a reference
+	 * to the returned token. Using this token with `waitFor()`, we can guarantee
+	 * that `CountryStore` is updated before the callback that updates `CityStore`
+	 * needs to query its data.
+	 *
+	 *   CityStore.dispatchToken = flightDispatcher.register(function(payload) {
+	 *     if (payload.actionType === 'country-update') {
+	 *       // `CountryStore.country` may not be updated.
+	 *       flightDispatcher.waitFor([CountryStore.dispatchToken]);
+	 *       // `CountryStore.country` is now guaranteed to be updated.
+	 *
+	 *       // Select the default city for the new country
+	 *       CityStore.city = getDefaultCityForCountry(CountryStore.country);
+	 *     }
+	 *   });
+	 *
+	 * The usage of `waitFor()` can be chained, for example:
+	 *
+	 *   FlightPriceStore.dispatchToken =
+	 *     flightDispatcher.register(function(payload) {
+	 *       switch (payload.actionType) {
+	 *         case 'country-update':
+	 *           flightDispatcher.waitFor([CityStore.dispatchToken]);
+	 *           FlightPriceStore.price =
+	 *             getFlightPriceStore(CountryStore.country, CityStore.city);
+	 *           break;
+	 *
+	 *         case 'city-update':
+	 *           FlightPriceStore.price =
+	 *             FlightPriceStore(CountryStore.country, CityStore.city);
+	 *           break;
+	 *     }
+	 *   });
+	 *
+	 * The `country-update` payload will be guaranteed to invoke the stores'
+	 * registered callbacks in order: `CountryStore`, `CityStore`, then
+	 * `FlightPriceStore`.
+	 */
+
+	  function Dispatcher() {
+	    this.$Dispatcher_callbacks = {};
+	    this.$Dispatcher_isPending = {};
+	    this.$Dispatcher_isHandled = {};
+	    this.$Dispatcher_isDispatching = false;
+	    this.$Dispatcher_pendingPayload = null;
+	  }
+
+	  /**
+	   * Registers a callback to be invoked with every dispatched payload. Returns
+	   * a token that can be used with `waitFor()`.
+	   *
+	   * @param {function} callback
+	   * @return {string}
+	   */
+	  Dispatcher.prototype.register=function(callback) {
+	    var id = _prefix + _lastID++;
+	    this.$Dispatcher_callbacks[id] = callback;
+	    return id;
+	  };
+
+	  /**
+	   * Removes a callback based on its token.
+	   *
+	   * @param {string} id
+	   */
+	  Dispatcher.prototype.unregister=function(id) {
+	    invariant(
+	      this.$Dispatcher_callbacks[id],
+	      'Dispatcher.unregister(...): `%s` does not map to a registered callback.',
+	      id
+	    );
+	    delete this.$Dispatcher_callbacks[id];
+	  };
+
+	  /**
+	   * Waits for the callbacks specified to be invoked before continuing execution
+	   * of the current callback. This method should only be used by a callback in
+	   * response to a dispatched payload.
+	   *
+	   * @param {array<string>} ids
+	   */
+	  Dispatcher.prototype.waitFor=function(ids) {
+	    invariant(
+	      this.$Dispatcher_isDispatching,
+	      'Dispatcher.waitFor(...): Must be invoked while dispatching.'
+	    );
+	    for (var ii = 0; ii < ids.length; ii++) {
+	      var id = ids[ii];
+	      if (this.$Dispatcher_isPending[id]) {
+	        invariant(
+	          this.$Dispatcher_isHandled[id],
+	          'Dispatcher.waitFor(...): Circular dependency detected while ' +
+	          'waiting for `%s`.',
+	          id
+	        );
+	        continue;
+	      }
+	      invariant(
+	        this.$Dispatcher_callbacks[id],
+	        'Dispatcher.waitFor(...): `%s` does not map to a registered callback.',
+	        id
+	      );
+	      this.$Dispatcher_invokeCallback(id);
+	    }
+	  };
+
+	  /**
+	   * Dispatches a payload to all registered callbacks.
+	   *
+	   * @param {object} payload
+	   */
+	  Dispatcher.prototype.dispatch=function(payload) {
+	    invariant(
+	      !this.$Dispatcher_isDispatching,
+	      'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.'
+	    );
+	    this.$Dispatcher_startDispatching(payload);
+	    try {
+	      for (var id in this.$Dispatcher_callbacks) {
+	        if (this.$Dispatcher_isPending[id]) {
+	          continue;
+	        }
+	        this.$Dispatcher_invokeCallback(id);
+	      }
+	    } finally {
+	      this.$Dispatcher_stopDispatching();
+	    }
+	  };
+
+	  /**
+	   * Is this Dispatcher currently dispatching.
+	   *
+	   * @return {boolean}
+	   */
+	  Dispatcher.prototype.isDispatching=function() {
+	    return this.$Dispatcher_isDispatching;
+	  };
+
+	  /**
+	   * Call the callback stored with the given id. Also do some internal
+	   * bookkeeping.
+	   *
+	   * @param {string} id
+	   * @internal
+	   */
+	  Dispatcher.prototype.$Dispatcher_invokeCallback=function(id) {
+	    this.$Dispatcher_isPending[id] = true;
+	    this.$Dispatcher_callbacks[id](this.$Dispatcher_pendingPayload);
+	    this.$Dispatcher_isHandled[id] = true;
+	  };
+
+	  /**
+	   * Set up bookkeeping needed when dispatching.
+	   *
+	   * @param {object} payload
+	   * @internal
+	   */
+	  Dispatcher.prototype.$Dispatcher_startDispatching=function(payload) {
+	    for (var id in this.$Dispatcher_callbacks) {
+	      this.$Dispatcher_isPending[id] = false;
+	      this.$Dispatcher_isHandled[id] = false;
+	    }
+	    this.$Dispatcher_pendingPayload = payload;
+	    this.$Dispatcher_isDispatching = true;
+	  };
+
+	  /**
+	   * Clear bookkeeping used for dispatching.
+	   *
+	   * @internal
+	   */
+	  Dispatcher.prototype.$Dispatcher_stopDispatching=function() {
+	    this.$Dispatcher_pendingPayload = null;
+	    this.$Dispatcher_isDispatching = false;
+	  };
+
+
+	module.exports = Dispatcher;
+
+
+/***/ },
+/* 320 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright (c) 2014, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule invariant
+	 */
+
+	"use strict";
+
+	/**
+	 * Use invariant() to assert state which your program assumes to be true.
+	 *
+	 * Provide sprintf-style format (only %s is supported) and arguments
+	 * to provide information about what broke and what you were
+	 * expecting.
+	 *
+	 * The invariant message will be stripped in production, but the invariant
+	 * will remain to ensure logic does not differ in production.
+	 */
+
+	var invariant = function(condition, format, a, b, c, d, e, f) {
+	  if (false) {
+	    if (format === undefined) {
+	      throw new Error('invariant requires an error message argument');
+	    }
+	  }
+
+	  if (!condition) {
+	    var error;
+	    if (format === undefined) {
+	      error = new Error(
+	        'Minified exception occurred; use the non-minified dev environment ' +
+	        'for the full error message and additional helpful warnings.'
+	      );
+	    } else {
+	      var args = [a, b, c, d, e, f];
+	      var argIndex = 0;
+	      error = new Error(
+	        'Invariant Violation: ' +
+	        format.replace(/%s/g, function() { return args[argIndex++]; })
+	      );
+	    }
+
+	    error.framesToPop = 1; // we don't care about invariant's own frame
+	    throw error;
+	  }
+	};
+
+	module.exports = invariant;
+
+
+/***/ },
+/* 321 */
+/***/ function(module, exports) {
+
+	var appConstants = {
+	  ADD_FACTOR: 'ADD_FACTOR',
+	  REMOVE_FACTOR: 'REMOVE_FACTOR',
+	  SEND_MESSAGE: 'SEND_MESSAGE',
+	  CHANGE_EVENT: 'CHANGE'
+	};
+	module.exports = appConstants;
+
+
+/***/ },
+/* 322 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(14);
+	var Bootstrap = __webpack_require__(170);
+	var factorTextcomplete = __webpack_require__(323);
 	var Button = Bootstrap.Button;
 	var Input = Bootstrap.Input;
 	var ChatInput = React.createClass({displayName: "ChatInput",
@@ -41457,18 +42025,36 @@
 	  },
 	  handleSubmit: function(e) {
 	    e.preventDefault();
-	    this.props.send(this.state.value);
+	    var message = this.state.value.trim();
+	    if (message) {
+	      this.props.send(this.state.value);
+	    }
 	    this.setState({value: ''});
 	  },
-	  handleEnter: function(e) {
+	  handleKeyDown: function(e) {
 	    // Cross-browser way to test for enter.
 	    var code = (e.keyCode ? e.keyCode : e.which);
-	    if (code == 13 && !e.shiftKey) {
+	    if (code == 13 && !e.shiftKey && !this.preventSubmit) {
 	      this.handleSubmit(e);
 	    }
 	  },
 	  handleChange: function(e) {
 	    this.setState({value: e.target.value});
+	  },
+	  textcompleteSelect: function(e) {
+	    this.preventSubmit = true;
+	    this.handleChange(e);
+	    // This is a hack to prevent submitting during textcomplete
+	    setTimeout(function() {
+	      this.preventSubmit = false;
+	    }.bind(this), 100);
+	  },
+	  componentDidMount: function() {
+	    this.preventSubmit = false;
+	    var node = this.getDOMNode();
+	    var $input = $(node).find('textarea');
+	    factorTextcomplete($input);
+	    $input.on('textComplete:select', this.textcompleteSelect);
 	  },
 	  render: function() {
 
@@ -41477,7 +42063,7 @@
 	      onClick: this.handleSubmit}, "Send");
 
 	    var input = React.createElement("textarea", {
-	      onKeyDown: this.handleEnter, 
+	      onKeyDown: this.handleKeyDown, 
 	      onChange: this.handleChange, 
 	      className: "form-control custom-control sendButton", 
 	      value: this.state.value});
@@ -41494,111 +42080,1316 @@
 
 
 /***/ },
-/* 315 */
+/* 323 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var React = __webpack_require__(14);
-	var Bootstrap = __webpack_require__(170);
-	var ChatMessage = __webpack_require__(316);
-	var ChatMessages = React.createClass({displayName: "ChatMessages",
-	  componentWillUpdate: function() {
-	    var node = this.getDOMNode();
-	    var innerHeight = $(node).innerHeight();
-	    this.shouldScrollBottom = node.scrollTop + innerHeight >= node.scrollHeight;
+	__webpack_require__(324);
+	var factorStore = __webpack_require__(325);
+
+	var strategy = {
+	  match: /\B#(\w*)$/,
+	  search: function(term, callback) {
+	    callback(factorStore.factorsStartingWith(term));
 	  },
-	  componentDidUpdate: function() {
-	    if (this.shouldScrollBottom) {
-	      var node = this.getDOMNode();
-	      node.scrollTop = node.scrollHeight;
-	    }
+	  template: function(value) {
+	    return factorStore.getFactors()[value];
 	  },
-	  render: function() {
-	    var makeMessage = function(message, i) {
-	      return React.createElement(ChatMessage, {key: i, message: message});
-	    };
-	    return (
-	      React.createElement("div", {className: "chatMessages"}, 
-	       this.props.messages.map(makeMessage)
-	      )
-	    );
-	  }
-	});
-	module.exports = ChatMessages;
+	  replace: function(value) {
+	    return '#' + value + ' ';
+	  },
+	  index: 1
+	};
+
+	var addTextcomplete = function($textarea) {
+	  return $textarea.textcomplete([strategy]);
+	};
+
+	module.exports = addTextcomplete;
 
 
 /***/ },
-/* 316 */
+/* 324 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var React = __webpack_require__(14);
-	var Bootstrap = __webpack_require__(170);
-	var ChatMessage = React.createClass({displayName: "ChatMessage",
-	  newlinesToBreaks: function(string) {
-	    var lines = string.split("\n");
-	    var elements = [];
-	    lines.map(function(line, i) {
-	      if (i > 0) {
-		elements.push(React.createElement("br", null));
-	      } 
-	      elements.push(line);
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (factory) {
+	  if (true) {
+	    // AMD. Register as an anonymous module.
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	  } else if (typeof module === "object" && module.exports) {
+	    var $ = require('jquery');
+	    module.exports = factory($);
+	  } else {
+	    // Browser globals
+	    factory(jQuery);
+	  }
+	}(function (jQuery) {
+
+	/*!
+	 * jQuery.textcomplete
+	 *
+	 * Repository: https://github.com/yuku-t/jquery-textcomplete
+	 * License:    MIT (https://github.com/yuku-t/jquery-textcomplete/blob/master/LICENSE)
+	 * Author:     Yuku Takahashi
+	 */
+
+	if (typeof jQuery === 'undefined') {
+	  throw new Error('jQuery.textcomplete requires jQuery');
+	}
+
+	+function ($) {
+	  'use strict';
+
+	  var warn = function (message) {
+	    if (console.warn) { console.warn(message); }
+	  };
+
+	  var id = 1;
+
+	  $.fn.textcomplete = function (strategies, option) {
+	    var args = Array.prototype.slice.call(arguments);
+	    return this.each(function () {
+	      var $this = $(this);
+	      var completer = $this.data('textComplete');
+	      if (!completer) {
+	        option || (option = {});
+	        option._oid = id++;  // unique object id
+	        completer = new $.fn.textcomplete.Completer(this, option);
+	        $this.data('textComplete', completer);
+	      }
+	      if (typeof strategies === 'string') {
+	        if (!completer) return;
+	        args.shift()
+	        completer[strategies].apply(completer, args);
+	        if (strategies === 'destroy') {
+	          $this.removeData('textComplete');
+	        }
+	      } else {
+	        // For backward compatibility.
+	        // TODO: Remove at v0.4
+	        $.each(strategies, function (obj) {
+	          $.each(['header', 'footer', 'placement', 'maxCount'], function (name) {
+	            if (obj[name]) {
+	              completer.option[name] = obj[name];
+	              warn(name + 'as a strategy param is deprecated. Use option.');
+	              delete obj[name];
+	            }
+	          });
+	        });
+	        completer.register($.fn.textcomplete.Strategy.parse(strategies));
+	      }
 	    });
-	    return elements;
-	  },
-	  render: function() {
-	    var message = this.props.message;
-	    var elements = this.newlinesToBreaks(message);
-	    return React.createElement("div", {className: "chatMessage img-rounded"}, elements);
+	  };
+
+	}(jQuery);
+
+	+function ($) {
+	  'use strict';
+
+	  // Exclusive execution control utility.
+	  //
+	  // func - The function to be locked. It is executed with a function named
+	  //        `free` as the first argument. Once it is called, additional
+	  //        execution are ignored until the free is invoked. Then the last
+	  //        ignored execution will be replayed immediately.
+	  //
+	  // Examples
+	  //
+	  //   var lockedFunc = lock(function (free) {
+	  //     setTimeout(function { free(); }, 1000); // It will be free in 1 sec.
+	  //     console.log('Hello, world');
+	  //   });
+	  //   lockedFunc();  // => 'Hello, world'
+	  //   lockedFunc();  // none
+	  //   lockedFunc();  // none
+	  //   // 1 sec past then
+	  //   // => 'Hello, world'
+	  //   lockedFunc();  // => 'Hello, world'
+	  //   lockedFunc();  // none
+	  //
+	  // Returns a wrapped function.
+	  var lock = function (func) {
+	    var locked, queuedArgsToReplay;
+
+	    return function () {
+	      // Convert arguments into a real array.
+	      var args = Array.prototype.slice.call(arguments);
+	      if (locked) {
+	        // Keep a copy of this argument list to replay later.
+	        // OK to overwrite a previous value because we only replay
+	        // the last one.
+	        queuedArgsToReplay = args;
+	        return;
+	      }
+	      locked = true;
+	      var self = this;
+	      args.unshift(function replayOrFree() {
+	        if (queuedArgsToReplay) {
+	          // Other request(s) arrived while we were locked.
+	          // Now that the lock is becoming available, replay
+	          // the latest such request, then call back here to
+	          // unlock (or replay another request that arrived
+	          // while this one was in flight).
+	          var replayArgs = queuedArgsToReplay;
+	          queuedArgsToReplay = undefined;
+	          replayArgs.unshift(replayOrFree);
+	          func.apply(self, replayArgs);
+	        } else {
+	          locked = false;
+	        }
+	      });
+	      func.apply(this, args);
+	    };
+	  };
+
+	  var isString = function (obj) {
+	    return Object.prototype.toString.call(obj) === '[object String]';
+	  };
+
+	  var isFunction = function (obj) {
+	    return Object.prototype.toString.call(obj) === '[object Function]';
+	  };
+
+	  var uniqueId = 0;
+
+	  function Completer(element, option) {
+	    this.$el        = $(element);
+	    this.id         = 'textcomplete' + uniqueId++;
+	    this.strategies = [];
+	    this.views      = [];
+	    this.option     = $.extend({}, Completer._getDefaults(), option);
+
+	    if (!this.$el.is('input[type=text]') && !this.$el.is('textarea') && !element.isContentEditable && element.contentEditable != 'true') {
+	      throw new Error('textcomplete must be called on a Textarea or a ContentEditable.');
+	    }
+
+	    if (element === document.activeElement) {
+	      // element has already been focused. Initialize view objects immediately.
+	      this.initialize()
+	    } else {
+	      // Initialize view objects lazily.
+	      var self = this;
+	      this.$el.one('focus.' + this.id, function () { self.initialize(); });
+	    }
 	  }
-	});
-	module.exports = ChatMessage;
+
+	  Completer._getDefaults = function () {
+	    if (!Completer.DEFAULTS) {
+	      Completer.DEFAULTS = {
+	        appendTo: $('body'),
+	        zIndex: '100'
+	      };
+	    }
+
+	    return Completer.DEFAULTS;
+	  }
+
+	  $.extend(Completer.prototype, {
+	    // Public properties
+	    // -----------------
+
+	    id:         null,
+	    option:     null,
+	    strategies: null,
+	    adapter:    null,
+	    dropdown:   null,
+	    $el:        null,
+
+	    // Public methods
+	    // --------------
+
+	    initialize: function () {
+	      var element = this.$el.get(0);
+	      // Initialize view objects.
+	      this.dropdown = new $.fn.textcomplete.Dropdown(element, this, this.option);
+	      var Adapter, viewName;
+	      if (this.option.adapter) {
+	        Adapter = this.option.adapter;
+	      } else {
+	        if (this.$el.is('textarea') || this.$el.is('input[type=text]')) {
+	          viewName = typeof element.selectionEnd === 'number' ? 'Textarea' : 'IETextarea';
+	        } else {
+	          viewName = 'ContentEditable';
+	        }
+	        Adapter = $.fn.textcomplete[viewName];
+	      }
+	      this.adapter = new Adapter(element, this, this.option);
+	    },
+
+	    destroy: function () {
+	      this.$el.off('.' + this.id);
+	      if (this.adapter) {
+	        this.adapter.destroy();
+	      }
+	      if (this.dropdown) {
+	        this.dropdown.destroy();
+	      }
+	      this.$el = this.adapter = this.dropdown = null;
+	    },
+
+	    // Invoke textcomplete.
+	    trigger: function (text, skipUnchangedTerm) {
+	      if (!this.dropdown) { this.initialize(); }
+	      text != null || (text = this.adapter.getTextFromHeadToCaret());
+	      var searchQuery = this._extractSearchQuery(text);
+	      if (searchQuery.length) {
+	        var term = searchQuery[1];
+	        // Ignore shift-key, ctrl-key and so on.
+	        if (skipUnchangedTerm && this._term === term) { return; }
+	        this._term = term;
+	        this._search.apply(this, searchQuery);
+	      } else {
+	        this._term = null;
+	        this.dropdown.deactivate();
+	      }
+	    },
+
+	    fire: function (eventName) {
+	      var args = Array.prototype.slice.call(arguments, 1);
+	      this.$el.trigger(eventName, args);
+	      return this;
+	    },
+
+	    register: function (strategies) {
+	      Array.prototype.push.apply(this.strategies, strategies);
+	    },
+
+	    // Insert the value into adapter view. It is called when the dropdown is clicked
+	    // or selected.
+	    //
+	    // value    - The selected element of the array callbacked from search func.
+	    // strategy - The Strategy object.
+	    // e        - Click or keydown event object.
+	    select: function (value, strategy, e) {
+	      this.adapter.select(value, strategy, e);
+	      this.fire('change').fire('textComplete:select', value, strategy);
+	      this.adapter.focus();
+	    },
+
+	    // Private properties
+	    // ------------------
+
+	    _clearAtNext: true,
+	    _term:        null,
+
+	    // Private methods
+	    // ---------------
+
+	    // Parse the given text and extract the first matching strategy.
+	    //
+	    // Returns an array including the strategy, the query term and the match
+	    // object if the text matches an strategy; otherwise returns an empty array.
+	    _extractSearchQuery: function (text) {
+	      for (var i = 0; i < this.strategies.length; i++) {
+	        var strategy = this.strategies[i];
+	        var context = strategy.context(text);
+	        if (context || context === '') {
+	          var matchRegexp = isFunction(strategy.match) ? strategy.match(text) : strategy.match;
+	          if (isString(context)) { text = context; }
+	          var match = text.match(matchRegexp);
+	          if (match) { return [strategy, match[strategy.index], match]; }
+	        }
+	      }
+	      return []
+	    },
+
+	    // Call the search method of selected strategy..
+	    _search: lock(function (free, strategy, term, match) {
+	      var self = this;
+	      strategy.search(term, function (data, stillSearching) {
+	        if (!self.dropdown.shown) {
+	          self.dropdown.activate();
+	        }
+	        if (self._clearAtNext) {
+	          // The first callback in the current lock.
+	          self.dropdown.clear();
+	          self._clearAtNext = false;
+	        }
+	        self.dropdown.setPosition(self.adapter.getCaretPosition());
+	        self.dropdown.render(self._zip(data, strategy, term));
+	        if (!stillSearching) {
+	          // The last callback in the current lock.
+	          free();
+	          self._clearAtNext = true; // Call dropdown.clear at the next time.
+	        }
+	      }, match);
+	    }),
+
+	    // Build a parameter for Dropdown#render.
+	    //
+	    // Examples
+	    //
+	    //  this._zip(['a', 'b'], 's');
+	    //  //=> [{ value: 'a', strategy: 's' }, { value: 'b', strategy: 's' }]
+	    _zip: function (data, strategy, term) {
+	      return $.map(data, function (value) {
+	        return { value: value, strategy: strategy, term: term };
+	      });
+	    }
+	  });
+
+	  $.fn.textcomplete.Completer = Completer;
+	}(jQuery);
+
+	+function ($) {
+	  'use strict';
+
+	  var $window = $(window);
+
+	  var include = function (zippedData, datum) {
+	    var i, elem;
+	    var idProperty = datum.strategy.idProperty
+	    for (i = 0; i < zippedData.length; i++) {
+	      elem = zippedData[i];
+	      if (elem.strategy !== datum.strategy) continue;
+	      if (idProperty) {
+	        if (elem.value[idProperty] === datum.value[idProperty]) return true;
+	      } else {
+	        if (elem.value === datum.value) return true;
+	      }
+	    }
+	    return false;
+	  };
+
+	  var dropdownViews = {};
+	  $(document).on('click', function (e) {
+	    var id = e.originalEvent && e.originalEvent.keepTextCompleteDropdown;
+	    $.each(dropdownViews, function (key, view) {
+	      if (key !== id) { view.deactivate(); }
+	    });
+	  });
+
+	  var commands = {
+	    SKIP_DEFAULT: 0,
+	    KEY_UP: 1,
+	    KEY_DOWN: 2,
+	    KEY_ENTER: 3,
+	    KEY_PAGEUP: 4,
+	    KEY_PAGEDOWN: 5,
+	    KEY_ESCAPE: 6
+	  };
+
+	  // Dropdown view
+	  // =============
+
+	  // Construct Dropdown object.
+	  //
+	  // element - Textarea or contenteditable element.
+	  function Dropdown(element, completer, option) {
+	    this.$el       = Dropdown.createElement(option);
+	    this.completer = completer;
+	    this.id        = completer.id + 'dropdown';
+	    this._data     = []; // zipped data.
+	    this.$inputEl  = $(element);
+	    this.option    = option;
+
+	    // Override setPosition method.
+	    if (option.listPosition) { this.setPosition = option.listPosition; }
+	    if (option.height) { this.$el.height(option.height); }
+	    var self = this;
+	    $.each(['maxCount', 'placement', 'footer', 'header', 'noResultsMessage', 'className'], function (_i, name) {
+	      if (option[name] != null) { self[name] = option[name]; }
+	    });
+	    this._bindEvents(element);
+	    dropdownViews[this.id] = this;
+	  }
+
+	  $.extend(Dropdown, {
+	    // Class methods
+	    // -------------
+
+	    createElement: function (option) {
+	      var $parent = option.appendTo;
+	      if (!($parent instanceof $)) { $parent = $($parent); }
+	      var $el = $('<ul></ul>')
+	        .addClass('dropdown-menu textcomplete-dropdown')
+	        .attr('id', 'textcomplete-dropdown-' + option._oid)
+	        .css({
+	          display: 'none',
+	          left: 0,
+	          position: 'absolute',
+	          zIndex: option.zIndex
+	        })
+	        .appendTo($parent);
+	      return $el;
+	    }
+	  });
+
+	  $.extend(Dropdown.prototype, {
+	    // Public properties
+	    // -----------------
+
+	    $el:       null,  // jQuery object of ul.dropdown-menu element.
+	    $inputEl:  null,  // jQuery object of target textarea.
+	    completer: null,
+	    footer:    null,
+	    header:    null,
+	    id:        null,
+	    maxCount:  10,
+	    placement: '',
+	    shown:     false,
+	    data:      [],     // Shown zipped data.
+	    className: '',
+
+	    // Public methods
+	    // --------------
+
+	    destroy: function () {
+	      // Don't remove $el because it may be shared by several textcompletes.
+	      this.deactivate();
+
+	      this.$el.off('.' + this.id);
+	      this.$inputEl.off('.' + this.id);
+	      this.clear();
+	      this.$el = this.$inputEl = this.completer = null;
+	      delete dropdownViews[this.id]
+	    },
+
+	    render: function (zippedData) {
+	      var contentsHtml = this._buildContents(zippedData);
+	      var unzippedData = $.map(this.data, function (d) { return d.value; });
+	      if (this.data.length) {
+	        this._renderHeader(unzippedData);
+	        this._renderFooter(unzippedData);
+	        if (contentsHtml) {
+	          this._renderContents(contentsHtml);
+	          this._fitToBottom();
+	          this._activateIndexedItem();
+	        }
+	        this._setScroll();
+	      } else if (this.noResultsMessage) {
+	        this._renderNoResultsMessage(unzippedData);
+	      } else if (this.shown) {
+	        this.deactivate();
+	      }
+	    },
+
+	    setPosition: function (pos) {
+	      this.$el.css(this._applyPlacement(pos));
+
+	      // Make the dropdown fixed if the input is also fixed
+	      // This can't be done during init, as textcomplete may be used on multiple elements on the same page
+	      // Because the same dropdown is reused behind the scenes, we need to recheck every time the dropdown is showed
+	      var position = 'absolute';
+	      // Check if input or one of its parents has positioning we need to care about
+	      this.$inputEl.add(this.$inputEl.parents()).each(function() {
+	        if($(this).css('position') === 'absolute') // The element has absolute positioning, so it's all OK
+	          return false;
+	        if($(this).css('position') === 'fixed') {
+	          position = 'fixed';
+	          return false;
+	        }
+	      });
+	      this.$el.css({ position: position }); // Update positioning
+
+	      return this;
+	    },
+
+	    clear: function () {
+	      this.$el.html('');
+	      this.data = [];
+	      this._index = 0;
+	      this._$header = this._$footer = this._$noResultsMessage = null;
+	    },
+
+	    activate: function () {
+	      if (!this.shown) {
+	        this.clear();
+	        this.$el.show();
+	        if (this.className) { this.$el.addClass(this.className); }
+	        this.completer.fire('textComplete:show');
+	        this.shown = true;
+	      }
+	      return this;
+	    },
+
+	    deactivate: function () {
+	      if (this.shown) {
+	        this.$el.hide();
+	        if (this.className) { this.$el.removeClass(this.className); }
+	        this.completer.fire('textComplete:hide');
+	        this.shown = false;
+	      }
+	      return this;
+	    },
+
+	    isUp: function (e) {
+	      return e.keyCode === 38 || (e.ctrlKey && e.keyCode === 80);  // UP, Ctrl-P
+	    },
+
+	    isDown: function (e) {
+	      return e.keyCode === 40 || (e.ctrlKey && e.keyCode === 78);  // DOWN, Ctrl-N
+	    },
+
+	    isEnter: function (e) {
+	      var modifiers = e.ctrlKey || e.altKey || e.metaKey || e.shiftKey;
+	      return !modifiers && (e.keyCode === 13 || e.keyCode === 9 || (this.option.completeOnSpace === true && e.keyCode === 32))  // ENTER, TAB
+	    },
+
+	    isPageup: function (e) {
+	      return e.keyCode === 33;  // PAGEUP
+	    },
+
+	    isPagedown: function (e) {
+	      return e.keyCode === 34;  // PAGEDOWN
+	    },
+
+	    isEscape: function (e) {
+	      return e.keyCode === 27;  // ESCAPE
+	    },
+
+	    // Private properties
+	    // ------------------
+
+	    _data:    null,  // Currently shown zipped data.
+	    _index:   null,
+	    _$header: null,
+	    _$noResultsMessage: null,
+	    _$footer: null,
+
+	    // Private methods
+	    // ---------------
+
+	    _bindEvents: function () {
+	      this.$el.on('mousedown.' + this.id, '.textcomplete-item', $.proxy(this._onClick, this));
+	      this.$el.on('touchstart.' + this.id, '.textcomplete-item', $.proxy(this._onClick, this));
+	      this.$el.on('mouseover.' + this.id, '.textcomplete-item', $.proxy(this._onMouseover, this));
+	      this.$inputEl.on('keydown.' + this.id, $.proxy(this._onKeydown, this));
+	    },
+
+	    _onClick: function (e) {
+	      var $el = $(e.target);
+	      e.preventDefault();
+	      e.originalEvent.keepTextCompleteDropdown = this.id;
+	      if (!$el.hasClass('textcomplete-item')) {
+	        $el = $el.closest('.textcomplete-item');
+	      }
+	      var datum = this.data[parseInt($el.data('index'), 10)];
+	      this.completer.select(datum.value, datum.strategy, e);
+	      var self = this;
+	      // Deactive at next tick to allow other event handlers to know whether
+	      // the dropdown has been shown or not.
+	      setTimeout(function () {
+	        self.deactivate();
+	        if (e.type === 'touchstart') {
+	          self.$inputEl.focus();
+	        }
+	      }, 0);
+	    },
+
+	    // Activate hovered item.
+	    _onMouseover: function (e) {
+	      var $el = $(e.target);
+	      e.preventDefault();
+	      if (!$el.hasClass('textcomplete-item')) {
+	        $el = $el.closest('.textcomplete-item');
+	      }
+	      this._index = parseInt($el.data('index'), 10);
+	      this._activateIndexedItem();
+	    },
+
+	    _onKeydown: function (e) {
+	      if (!this.shown) { return; }
+
+	      var command;
+
+	      if ($.isFunction(this.option.onKeydown)) {
+	        command = this.option.onKeydown(e, commands);
+	      }
+
+	      if (command == null) {
+	        command = this._defaultKeydown(e);
+	      }
+
+	      switch (command) {
+	        case commands.KEY_UP:
+	          e.preventDefault();
+	          this._up();
+	          break;
+	        case commands.KEY_DOWN:
+	          e.preventDefault();
+	          this._down();
+	          break;
+	        case commands.KEY_ENTER:
+	          e.preventDefault();
+	          this._enter(e);
+	          break;
+	        case commands.KEY_PAGEUP:
+	          e.preventDefault();
+	          this._pageup();
+	          break;
+	        case commands.KEY_PAGEDOWN:
+	          e.preventDefault();
+	          this._pagedown();
+	          break;
+	        case commands.KEY_ESCAPE:
+	          e.preventDefault();
+	          this.deactivate();
+	          break;
+	      }
+	    },
+
+	    _defaultKeydown: function (e) {
+	      if (this.isUp(e)) {
+	        return commands.KEY_UP;
+	      } else if (this.isDown(e)) {
+	        return commands.KEY_DOWN;
+	      } else if (this.isEnter(e)) {
+	        return commands.KEY_ENTER;
+	      } else if (this.isPageup(e)) {
+	        return commands.KEY_PAGEUP;
+	      } else if (this.isPagedown(e)) {
+	        return commands.KEY_PAGEDOWN;
+	      } else if (this.isEscape(e)) {
+	        return commands.KEY_ESCAPE;
+	      }
+	    },
+
+	    _up: function () {
+	      if (this._index === 0) {
+	        this._index = this.data.length - 1;
+	      } else {
+	        this._index -= 1;
+	      }
+	      this._activateIndexedItem();
+	      this._setScroll();
+	    },
+
+	    _down: function () {
+	      if (this._index === this.data.length - 1) {
+	        this._index = 0;
+	      } else {
+	        this._index += 1;
+	      }
+	      this._activateIndexedItem();
+	      this._setScroll();
+	    },
+
+	    _enter: function (e) {
+	      var datum = this.data[parseInt(this._getActiveElement().data('index'), 10)];
+	      this.completer.select(datum.value, datum.strategy, e);
+	      this.deactivate();
+	    },
+
+	    _pageup: function () {
+	      var target = 0;
+	      var threshold = this._getActiveElement().position().top - this.$el.innerHeight();
+	      this.$el.children().each(function (i) {
+	        if ($(this).position().top + $(this).outerHeight() > threshold) {
+	          target = i;
+	          return false;
+	        }
+	      });
+	      this._index = target;
+	      this._activateIndexedItem();
+	      this._setScroll();
+	    },
+
+	    _pagedown: function () {
+	      var target = this.data.length - 1;
+	      var threshold = this._getActiveElement().position().top + this.$el.innerHeight();
+	      this.$el.children().each(function (i) {
+	        if ($(this).position().top > threshold) {
+	          target = i;
+	          return false
+	        }
+	      });
+	      this._index = target;
+	      this._activateIndexedItem();
+	      this._setScroll();
+	    },
+
+	    _activateIndexedItem: function () {
+	      this.$el.find('.textcomplete-item.active').removeClass('active');
+	      this._getActiveElement().addClass('active');
+	    },
+
+	    _getActiveElement: function () {
+	      return this.$el.children('.textcomplete-item:nth(' + this._index + ')');
+	    },
+
+	    _setScroll: function () {
+	      var $activeEl = this._getActiveElement();
+	      var itemTop = $activeEl.position().top;
+	      var itemHeight = $activeEl.outerHeight();
+	      var visibleHeight = this.$el.innerHeight();
+	      var visibleTop = this.$el.scrollTop();
+	      if (this._index === 0 || this._index == this.data.length - 1 || itemTop < 0) {
+	        this.$el.scrollTop(itemTop + visibleTop);
+	      } else if (itemTop + itemHeight > visibleHeight) {
+	        this.$el.scrollTop(itemTop + itemHeight + visibleTop - visibleHeight);
+	      }
+	    },
+
+	    _buildContents: function (zippedData) {
+	      var datum, i, index;
+	      var html = '';
+	      for (i = 0; i < zippedData.length; i++) {
+	        if (this.data.length === this.maxCount) break;
+	        datum = zippedData[i];
+	        if (include(this.data, datum)) { continue; }
+	        index = this.data.length;
+	        this.data.push(datum);
+	        html += '<li class="textcomplete-item" data-index="' + index + '"><a>';
+	        html +=   datum.strategy.template(datum.value, datum.term);
+	        html += '</a></li>';
+	      }
+	      return html;
+	    },
+
+	    _renderHeader: function (unzippedData) {
+	      if (this.header) {
+	        if (!this._$header) {
+	          this._$header = $('<li class="textcomplete-header"></li>').prependTo(this.$el);
+	        }
+	        var html = $.isFunction(this.header) ? this.header(unzippedData) : this.header;
+	        this._$header.html(html);
+	      }
+	    },
+
+	    _renderFooter: function (unzippedData) {
+	      if (this.footer) {
+	        if (!this._$footer) {
+	          this._$footer = $('<li class="textcomplete-footer"></li>').appendTo(this.$el);
+	        }
+	        var html = $.isFunction(this.footer) ? this.footer(unzippedData) : this.footer;
+	        this._$footer.html(html);
+	      }
+	    },
+
+	    _renderNoResultsMessage: function (unzippedData) {
+	      if (this.noResultsMessage) {
+	        if (!this._$noResultsMessage) {
+	          this._$noResultsMessage = $('<li class="textcomplete-no-results-message"></li>').appendTo(this.$el);
+	        }
+	        var html = $.isFunction(this.noResultsMessage) ? this.noResultsMessage(unzippedData) : this.noResultsMessage;
+	        this._$noResultsMessage.html(html);
+	      }
+	    },
+
+	    _renderContents: function (html) {
+	      if (this._$footer) {
+	        this._$footer.before(html);
+	      } else {
+	        this.$el.append(html);
+	      }
+	    },
+
+	    _fitToBottom: function() {
+	      var windowScrollBottom = $window.scrollTop() + $window.height();
+	      var height = this.$el.height();
+	      if ((this.$el.position().top + height) > windowScrollBottom) {
+	        this.$el.offset({top: windowScrollBottom - height});
+	      }
+	    },
+
+	    _applyPlacement: function (position) {
+	      // If the 'placement' option set to 'top', move the position above the element.
+	      if (this.placement.indexOf('top') !== -1) {
+	        // Overwrite the position object to set the 'bottom' property instead of the top.
+	        position = {
+	          top: 'auto',
+	          bottom: this.$el.parent().height() - position.top + position.lineHeight,
+	          left: position.left
+	        };
+	      } else {
+	        position.bottom = 'auto';
+	        delete position.lineHeight;
+	      }
+	      if (this.placement.indexOf('absleft') !== -1) {
+	        position.left = 0;
+	      } else if (this.placement.indexOf('absright') !== -1) {
+	        position.right = 0;
+	        position.left = 'auto';
+	      }
+	      return position;
+	    }
+	  });
+
+	  $.fn.textcomplete.Dropdown = Dropdown;
+	  $.extend($.fn.textcomplete, commands);
+	}(jQuery);
+
+	+function ($) {
+	  'use strict';
+
+	  // Memoize a search function.
+	  var memoize = function (func) {
+	    var memo = {};
+	    return function (term, callback) {
+	      if (memo[term]) {
+	        callback(memo[term]);
+	      } else {
+	        func.call(this, term, function (data) {
+	          memo[term] = (memo[term] || []).concat(data);
+	          callback.apply(null, arguments);
+	        });
+	      }
+	    };
+	  };
+
+	  function Strategy(options) {
+	    $.extend(this, options);
+	    if (this.cache) { this.search = memoize(this.search); }
+	  }
+
+	  Strategy.parse = function (optionsArray) {
+	    return $.map(optionsArray, function (options) {
+	      return new Strategy(options);
+	    });
+	  };
+
+	  $.extend(Strategy.prototype, {
+	    // Public properties
+	    // -----------------
+
+	    // Required
+	    match:      null,
+	    replace:    null,
+	    search:     null,
+
+	    // Optional
+	    cache:      false,
+	    context:    function () { return true; },
+	    index:      2,
+	    template:   function (obj) { return obj; },
+	    idProperty: null
+	  });
+
+	  $.fn.textcomplete.Strategy = Strategy;
+
+	}(jQuery);
+
+	+function ($) {
+	  'use strict';
+
+	  var now = Date.now || function () { return new Date().getTime(); };
+
+	  // Returns a function, that, as long as it continues to be invoked, will not
+	  // be triggered. The function will be called after it stops being called for
+	  // `wait` msec.
+	  //
+	  // This utility function was originally implemented at Underscore.js.
+	  var debounce = function (func, wait) {
+	    var timeout, args, context, timestamp, result;
+	    var later = function () {
+	      var last = now() - timestamp;
+	      if (last < wait) {
+	        timeout = setTimeout(later, wait - last);
+	      } else {
+	        timeout = null;
+	        result = func.apply(context, args);
+	        context = args = null;
+	      }
+	    };
+
+	    return function () {
+	      context = this;
+	      args = arguments;
+	      timestamp = now();
+	      if (!timeout) {
+	        timeout = setTimeout(later, wait);
+	      }
+	      return result;
+	    };
+	  };
+
+	  function Adapter () {}
+
+	  $.extend(Adapter.prototype, {
+	    // Public properties
+	    // -----------------
+
+	    id:        null, // Identity.
+	    completer: null, // Completer object which creates it.
+	    el:        null, // Textarea element.
+	    $el:       null, // jQuery object of the textarea.
+	    option:    null,
+
+	    // Public methods
+	    // --------------
+
+	    initialize: function (element, completer, option) {
+	      this.el        = element;
+	      this.$el       = $(element);
+	      this.id        = completer.id + this.constructor.name;
+	      this.completer = completer;
+	      this.option    = option;
+
+	      if (this.option.debounce) {
+	        this._onKeyup = debounce(this._onKeyup, this.option.debounce);
+	      }
+
+	      this._bindEvents();
+	    },
+
+	    destroy: function () {
+	      this.$el.off('.' + this.id); // Remove all event handlers.
+	      this.$el = this.el = this.completer = null;
+	    },
+
+	    // Update the element with the given value and strategy.
+	    //
+	    // value    - The selected object. It is one of the item of the array
+	    //            which was callbacked from the search function.
+	    // strategy - The Strategy associated with the selected value.
+	    select: function (/* value, strategy */) {
+	      throw new Error('Not implemented');
+	    },
+
+	    // Returns the caret's relative coordinates from body's left top corner.
+	    //
+	    // FIXME: Calculate the left top corner of `this.option.appendTo` element.
+	    getCaretPosition: function () {
+	      var position = this._getCaretRelativePosition();
+	      var offset = this.$el.offset();
+	      position.top += offset.top;
+	      position.left += offset.left;
+	      return position;
+	    },
+
+	    // Focus on the element.
+	    focus: function () {
+	      this.$el.focus();
+	    },
+
+	    // Private methods
+	    // ---------------
+
+	    _bindEvents: function () {
+	      this.$el.on('keyup.' + this.id, $.proxy(this._onKeyup, this));
+	    },
+
+	    _onKeyup: function (e) {
+	      if (this._skipSearch(e)) { return; }
+	      this.completer.trigger(this.getTextFromHeadToCaret(), true);
+	    },
+
+	    // Suppress searching if it returns true.
+	    _skipSearch: function (clickEvent) {
+	      switch (clickEvent.keyCode) {
+	        case 13: // ENTER
+	        case 40: // DOWN
+	        case 38: // UP
+	          return true;
+	      }
+	      if (clickEvent.ctrlKey) switch (clickEvent.keyCode) {
+	        case 78: // Ctrl-N
+	        case 80: // Ctrl-P
+	          return true;
+	      }
+	    }
+	  });
+
+	  $.fn.textcomplete.Adapter = Adapter;
+	}(jQuery);
+
+	+function ($) {
+	  'use strict';
+
+	  // Textarea adapter
+	  // ================
+	  //
+	  // Managing a textarea. It doesn't know a Dropdown.
+	  function Textarea(element, completer, option) {
+	    this.initialize(element, completer, option);
+	  }
+
+	  Textarea.DIV_PROPERTIES = {
+	    left: -9999,
+	    position: 'absolute',
+	    top: 0,
+	    whiteSpace: 'pre-wrap'
+	  }
+
+	  Textarea.COPY_PROPERTIES = [
+	    'border-width', 'font-family', 'font-size', 'font-style', 'font-variant',
+	    'font-weight', 'height', 'letter-spacing', 'word-spacing', 'line-height',
+	    'text-decoration', 'text-align', 'width', 'padding-top', 'padding-right',
+	    'padding-bottom', 'padding-left', 'margin-top', 'margin-right',
+	    'margin-bottom', 'margin-left', 'border-style', 'box-sizing', 'tab-size'
+	  ];
+
+	  $.extend(Textarea.prototype, $.fn.textcomplete.Adapter.prototype, {
+	    // Public methods
+	    // --------------
+
+	    // Update the textarea with the given value and strategy.
+	    select: function (value, strategy, e) {
+	      var pre = this.getTextFromHeadToCaret();
+	      var post = this.el.value.substring(this.el.selectionEnd);
+	      var newSubstr = strategy.replace(value, e);
+	      if ($.isArray(newSubstr)) {
+	        post = newSubstr[1] + post;
+	        newSubstr = newSubstr[0];
+	      }
+	      pre = pre.replace(strategy.match, newSubstr);
+	      this.$el.val(pre + post);
+	      this.el.selectionStart = this.el.selectionEnd = pre.length;
+	    },
+
+	    // Private methods
+	    // ---------------
+
+	    // Returns the caret's relative coordinates from textarea's left top corner.
+	    //
+	    // Browser native API does not provide the way to know the position of
+	    // caret in pixels, so that here we use a kind of hack to accomplish
+	    // the aim. First of all it puts a dummy div element and completely copies
+	    // the textarea's style to the element, then it inserts the text and a
+	    // span element into the textarea.
+	    // Consequently, the span element's position is the thing what we want.
+	    _getCaretRelativePosition: function () {
+	      var dummyDiv = $('<div></div>').css(this._copyCss())
+	        .text(this.getTextFromHeadToCaret());
+	      var span = $('<span></span>').text('.').appendTo(dummyDiv);
+	      this.$el.before(dummyDiv);
+	      var position = span.position();
+	      position.top += span.height() - this.$el.scrollTop();
+	      position.lineHeight = span.height();
+	      dummyDiv.remove();
+	      return position;
+	    },
+
+	    _copyCss: function () {
+	      return $.extend({
+	        // Set 'scroll' if a scrollbar is being shown; otherwise 'auto'.
+	        overflow: this.el.scrollHeight > this.el.offsetHeight ? 'scroll' : 'auto'
+	      }, Textarea.DIV_PROPERTIES, this._getStyles());
+	    },
+
+	    _getStyles: (function ($) {
+	      var color = $('<div></div>').css(['color']).color;
+	      if (typeof color !== 'undefined') {
+	        return function () {
+	          return this.$el.css(Textarea.COPY_PROPERTIES);
+	        };
+	      } else { // jQuery < 1.8
+	        return function () {
+	          var $el = this.$el;
+	          var styles = {};
+	          $.each(Textarea.COPY_PROPERTIES, function (i, property) {
+	            styles[property] = $el.css(property);
+	          });
+	          return styles;
+	        };
+	      }
+	    })($),
+
+	    getTextFromHeadToCaret: function () {
+	      return this.el.value.substring(0, this.el.selectionEnd);
+	    }
+	  });
+
+	  $.fn.textcomplete.Textarea = Textarea;
+	}(jQuery);
+
+	+function ($) {
+	  'use strict';
+
+	  var sentinelChar = '吶';
+
+	  function IETextarea(element, completer, option) {
+	    this.initialize(element, completer, option);
+	    $('<span>' + sentinelChar + '</span>').css({
+	      position: 'absolute',
+	      top: -9999,
+	      left: -9999
+	    }).insertBefore(element);
+	  }
+
+	  $.extend(IETextarea.prototype, $.fn.textcomplete.Textarea.prototype, {
+	    // Public methods
+	    // --------------
+
+	    select: function (value, strategy, e) {
+	      var pre = this.getTextFromHeadToCaret();
+	      var post = this.el.value.substring(pre.length);
+	      var newSubstr = strategy.replace(value, e);
+	      if ($.isArray(newSubstr)) {
+	        post = newSubstr[1] + post;
+	        newSubstr = newSubstr[0];
+	      }
+	      pre = pre.replace(strategy.match, newSubstr);
+	      this.$el.val(pre + post);
+	      this.el.focus();
+	      var range = this.el.createTextRange();
+	      range.collapse(true);
+	      range.moveEnd('character', pre.length);
+	      range.moveStart('character', pre.length);
+	      range.select();
+	    },
+
+	    getTextFromHeadToCaret: function () {
+	      this.el.focus();
+	      var range = document.selection.createRange();
+	      range.moveStart('character', -this.el.value.length);
+	      var arr = range.text.split(sentinelChar)
+	      return arr.length === 1 ? arr[0] : arr[1];
+	    }
+	  });
+
+	  $.fn.textcomplete.IETextarea = IETextarea;
+	}(jQuery);
+
+	// NOTE: TextComplete plugin has contenteditable support but it does not work
+	//       fine especially on old IEs.
+	//       Any pull requests are REALLY welcome.
+
+	+function ($) {
+	  'use strict';
+
+	  // ContentEditable adapter
+	  // =======================
+	  //
+	  // Adapter for contenteditable elements.
+	  function ContentEditable (element, completer, option) {
+	    this.initialize(element, completer, option);
+	  }
+
+	  $.extend(ContentEditable.prototype, $.fn.textcomplete.Adapter.prototype, {
+	    // Public methods
+	    // --------------
+
+	    // Update the content with the given value and strategy.
+	    // When an dropdown item is selected, it is executed.
+	    select: function (value, strategy, e) {
+	      var pre = this.getTextFromHeadToCaret();
+	      var sel = window.getSelection()
+	      var range = sel.getRangeAt(0);
+	      var selection = range.cloneRange();
+	      selection.selectNodeContents(range.startContainer);
+	      var content = selection.toString();
+	      var post = content.substring(range.startOffset);
+	      var newSubstr = strategy.replace(value, e);
+	      if ($.isArray(newSubstr)) {
+	        post = newSubstr[1] + post;
+	        newSubstr = newSubstr[0];
+	      }
+	      pre = pre.replace(strategy.match, newSubstr);
+	      range.selectNodeContents(range.startContainer);
+	      range.deleteContents();
+	      var node = document.createTextNode(pre + post);
+	      range.insertNode(node);
+	      range.setStart(node, pre.length);
+	      range.collapse(true);
+	      sel.removeAllRanges();
+	      sel.addRange(range);
+	    },
+
+	    // Private methods
+	    // ---------------
+
+	    // Returns the caret's relative position from the contenteditable's
+	    // left top corner.
+	    //
+	    // Examples
+	    //
+	    //   this._getCaretRelativePosition()
+	    //   //=> { top: 18, left: 200, lineHeight: 16 }
+	    //
+	    // Dropdown's position will be decided using the result.
+	    _getCaretRelativePosition: function () {
+	      var range = window.getSelection().getRangeAt(0).cloneRange();
+	      var node = document.createElement('span');
+	      range.insertNode(node);
+	      range.selectNodeContents(node);
+	      range.deleteContents();
+	      var $node = $(node);
+	      var position = $node.offset();
+	      position.left -= this.$el.offset().left;
+	      position.top += $node.height() - this.$el.offset().top;
+	      position.lineHeight = $node.height();
+	      $node.remove();
+	      var dir = this.$el.attr('dir') || this.$el.css('direction');
+	      if (dir === 'rtl') { position.left -= this.listView.$el.width(); }
+	      return position;
+	    },
+
+	    // Returns the string between the first character and the caret.
+	    // Completer will be triggered with the result for start autocompleting.
+	    //
+	    // Example
+	    //
+	    //   // Suppose the html is '<b>hello</b> wor|ld' and | is the caret.
+	    //   this.getTextFromHeadToCaret()
+	    //   // => ' wor'  // not '<b>hello</b> wor'
+	    getTextFromHeadToCaret: function () {
+	      var range = window.getSelection().getRangeAt(0);
+	      var selection = range.cloneRange();
+	      selection.selectNodeContents(range.startContainer);
+	      return selection.toString().substring(0, range.startOffset);
+	    }
+	  });
+
+	  $.fn.textcomplete.ContentEditable = ContentEditable;
+	}(jQuery);
+
+	return jQuery;
+	}));
 
 
 /***/ },
-/* 317 */
+/* 325 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var objectAssign = __webpack_require__(26);
-	var EventEmitter = __webpack_require__(318).EventEmitter;
-	var AppDispatcher = __webpack_require__(319);
-	var appConstants = __webpack_require__(323);
+	var EventEmitter = __webpack_require__(326).EventEmitter;
+	var AppDispatcher = __webpack_require__(317);
+	var appConstants = __webpack_require__(321);
+	var InvertedIndex = __webpack_require__(327);
 
 	var _store = {
-	  messages: [ ]
+	  factors: [],
+	  index: new InvertedIndex()
 	};
 
-	var sendMessage = function(message) {
-	  _store.messages.push(message);
+	var addFactor = function(factor) {
+	  var index = _store.factors.length;
+	  _store.factors.push(factor);
+	  _store.index.addDocument(index, factor);
 	};
 
-	var chatStore = objectAssign({}, EventEmitter.prototype, {
+	var removeFactor = function(index) {
+	  _store.factors.splice(index, 1);
+	  _store.index.removeDocument(index);
+	};
+
+	var factorStore = objectAssign({}, EventEmitter.prototype, {
 	  addChangeListener: function(cb) {
 	    this.on(appConstants.CHANGE_EVENT, cb);
 	  },
 	  removeChangeListener: function(cb) {
-	    this.on(appConstants.CHANGE_EVENT, cb);
+	    this.removeListener(appConstants.CHANGE_EVENT, cb);
 	  },
-	  getMessages: function() {
-	    return _store.messages;
+	  getFactors: function() {
+	    return _store.factors;
+	  },
+	  factorsStartingWith: function(prefix) {
+	    return _store.index.prefixSearch(prefix);
 	  }
 	});
 
 	AppDispatcher.register(function(payload) {
 	  var action = payload.action;
 	  switch(action.actionType) {
-	    case appConstants.SEND_MESSAGE:
-	      sendMessage(action.data);
-	      chatStore.emit(appConstants.CHANGE_EVENT);
-	      break
+	    case appConstants.ADD_FACTOR:
+	      addFactor(action.data);
+	      factorStore.emit(appConstants.CHANGE_EVENT);
+	      break;
+	    case appConstants.REMOVE_FACTOR:
+	      removeFactor(action.data);
+	      factorStore.emit(appConstants.CHANGE_EVENT);
+	      break;
 	    default:
 	      return true;
 	  };
 	});
 
-	module.exports = chatStore;
+	module.exports = factorStore;
 
 
 /***/ },
-/* 318 */
+/* 326 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -41905,372 +43696,194 @@
 
 
 /***/ },
-/* 319 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Dispatcher = __webpack_require__(320).Dispatcher;
-	var AppDispatcher = new Dispatcher();
-
-	AppDispatcher.handleAction = function(action) {
-	  this.dispatch({
-	    source: 'VIEW_ACTION',
-	    action: action
-	  });
-	};
-
-	module.exports = AppDispatcher;
-
-
-/***/ },
-/* 320 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright (c) 2014-2015, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 */
-
-	module.exports.Dispatcher = __webpack_require__(321)
-
-
-/***/ },
-/* 321 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-	 * Copyright (c) 2014, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule Dispatcher
-	 * @typechecks
-	 */
-
-	"use strict";
-
-	var invariant = __webpack_require__(322);
-
-	var _lastID = 1;
-	var _prefix = 'ID_';
-
-	/**
-	 * Dispatcher is used to broadcast payloads to registered callbacks. This is
-	 * different from generic pub-sub systems in two ways:
-	 *
-	 *   1) Callbacks are not subscribed to particular events. Every payload is
-	 *      dispatched to every registered callback.
-	 *   2) Callbacks can be deferred in whole or part until other callbacks have
-	 *      been executed.
-	 *
-	 * For example, consider this hypothetical flight destination form, which
-	 * selects a default city when a country is selected:
-	 *
-	 *   var flightDispatcher = new Dispatcher();
-	 *
-	 *   // Keeps track of which country is selected
-	 *   var CountryStore = {country: null};
-	 *
-	 *   // Keeps track of which city is selected
-	 *   var CityStore = {city: null};
-	 *
-	 *   // Keeps track of the base flight price of the selected city
-	 *   var FlightPriceStore = {price: null}
-	 *
-	 * When a user changes the selected city, we dispatch the payload:
-	 *
-	 *   flightDispatcher.dispatch({
-	 *     actionType: 'city-update',
-	 *     selectedCity: 'paris'
-	 *   });
-	 *
-	 * This payload is digested by `CityStore`:
-	 *
-	 *   flightDispatcher.register(function(payload) {
-	 *     if (payload.actionType === 'city-update') {
-	 *       CityStore.city = payload.selectedCity;
-	 *     }
-	 *   });
-	 *
-	 * When the user selects a country, we dispatch the payload:
-	 *
-	 *   flightDispatcher.dispatch({
-	 *     actionType: 'country-update',
-	 *     selectedCountry: 'australia'
-	 *   });
-	 *
-	 * This payload is digested by both stores:
-	 *
-	 *    CountryStore.dispatchToken = flightDispatcher.register(function(payload) {
-	 *     if (payload.actionType === 'country-update') {
-	 *       CountryStore.country = payload.selectedCountry;
-	 *     }
-	 *   });
-	 *
-	 * When the callback to update `CountryStore` is registered, we save a reference
-	 * to the returned token. Using this token with `waitFor()`, we can guarantee
-	 * that `CountryStore` is updated before the callback that updates `CityStore`
-	 * needs to query its data.
-	 *
-	 *   CityStore.dispatchToken = flightDispatcher.register(function(payload) {
-	 *     if (payload.actionType === 'country-update') {
-	 *       // `CountryStore.country` may not be updated.
-	 *       flightDispatcher.waitFor([CountryStore.dispatchToken]);
-	 *       // `CountryStore.country` is now guaranteed to be updated.
-	 *
-	 *       // Select the default city for the new country
-	 *       CityStore.city = getDefaultCityForCountry(CountryStore.country);
-	 *     }
-	 *   });
-	 *
-	 * The usage of `waitFor()` can be chained, for example:
-	 *
-	 *   FlightPriceStore.dispatchToken =
-	 *     flightDispatcher.register(function(payload) {
-	 *       switch (payload.actionType) {
-	 *         case 'country-update':
-	 *           flightDispatcher.waitFor([CityStore.dispatchToken]);
-	 *           FlightPriceStore.price =
-	 *             getFlightPriceStore(CountryStore.country, CityStore.city);
-	 *           break;
-	 *
-	 *         case 'city-update':
-	 *           FlightPriceStore.price =
-	 *             FlightPriceStore(CountryStore.country, CityStore.city);
-	 *           break;
-	 *     }
-	 *   });
-	 *
-	 * The `country-update` payload will be guaranteed to invoke the stores'
-	 * registered callbacks in order: `CountryStore`, `CityStore`, then
-	 * `FlightPriceStore`.
-	 */
-
-	  function Dispatcher() {
-	    this.$Dispatcher_callbacks = {};
-	    this.$Dispatcher_isPending = {};
-	    this.$Dispatcher_isHandled = {};
-	    this.$Dispatcher_isDispatching = false;
-	    this.$Dispatcher_pendingPayload = null;
-	  }
-
-	  /**
-	   * Registers a callback to be invoked with every dispatched payload. Returns
-	   * a token that can be used with `waitFor()`.
-	   *
-	   * @param {function} callback
-	   * @return {string}
-	   */
-	  Dispatcher.prototype.register=function(callback) {
-	    var id = _prefix + _lastID++;
-	    this.$Dispatcher_callbacks[id] = callback;
-	    return id;
-	  };
-
-	  /**
-	   * Removes a callback based on its token.
-	   *
-	   * @param {string} id
-	   */
-	  Dispatcher.prototype.unregister=function(id) {
-	    invariant(
-	      this.$Dispatcher_callbacks[id],
-	      'Dispatcher.unregister(...): `%s` does not map to a registered callback.',
-	      id
-	    );
-	    delete this.$Dispatcher_callbacks[id];
-	  };
-
-	  /**
-	   * Waits for the callbacks specified to be invoked before continuing execution
-	   * of the current callback. This method should only be used by a callback in
-	   * response to a dispatched payload.
-	   *
-	   * @param {array<string>} ids
-	   */
-	  Dispatcher.prototype.waitFor=function(ids) {
-	    invariant(
-	      this.$Dispatcher_isDispatching,
-	      'Dispatcher.waitFor(...): Must be invoked while dispatching.'
-	    );
-	    for (var ii = 0; ii < ids.length; ii++) {
-	      var id = ids[ii];
-	      if (this.$Dispatcher_isPending[id]) {
-	        invariant(
-	          this.$Dispatcher_isHandled[id],
-	          'Dispatcher.waitFor(...): Circular dependency detected while ' +
-	          'waiting for `%s`.',
-	          id
-	        );
-	        continue;
-	      }
-	      invariant(
-	        this.$Dispatcher_callbacks[id],
-	        'Dispatcher.waitFor(...): `%s` does not map to a registered callback.',
-	        id
-	      );
-	      this.$Dispatcher_invokeCallback(id);
-	    }
-	  };
-
-	  /**
-	   * Dispatches a payload to all registered callbacks.
-	   *
-	   * @param {object} payload
-	   */
-	  Dispatcher.prototype.dispatch=function(payload) {
-	    invariant(
-	      !this.$Dispatcher_isDispatching,
-	      'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.'
-	    );
-	    this.$Dispatcher_startDispatching(payload);
-	    try {
-	      for (var id in this.$Dispatcher_callbacks) {
-	        if (this.$Dispatcher_isPending[id]) {
-	          continue;
-	        }
-	        this.$Dispatcher_invokeCallback(id);
-	      }
-	    } finally {
-	      this.$Dispatcher_stopDispatching();
-	    }
-	  };
-
-	  /**
-	   * Is this Dispatcher currently dispatching.
-	   *
-	   * @return {boolean}
-	   */
-	  Dispatcher.prototype.isDispatching=function() {
-	    return this.$Dispatcher_isDispatching;
-	  };
-
-	  /**
-	   * Call the callback stored with the given id. Also do some internal
-	   * bookkeeping.
-	   *
-	   * @param {string} id
-	   * @internal
-	   */
-	  Dispatcher.prototype.$Dispatcher_invokeCallback=function(id) {
-	    this.$Dispatcher_isPending[id] = true;
-	    this.$Dispatcher_callbacks[id](this.$Dispatcher_pendingPayload);
-	    this.$Dispatcher_isHandled[id] = true;
-	  };
-
-	  /**
-	   * Set up bookkeeping needed when dispatching.
-	   *
-	   * @param {object} payload
-	   * @internal
-	   */
-	  Dispatcher.prototype.$Dispatcher_startDispatching=function(payload) {
-	    for (var id in this.$Dispatcher_callbacks) {
-	      this.$Dispatcher_isPending[id] = false;
-	      this.$Dispatcher_isHandled[id] = false;
-	    }
-	    this.$Dispatcher_pendingPayload = payload;
-	    this.$Dispatcher_isDispatching = true;
-	  };
-
-	  /**
-	   * Clear bookkeeping used for dispatching.
-	   *
-	   * @internal
-	   */
-	  Dispatcher.prototype.$Dispatcher_stopDispatching=function() {
-	    this.$Dispatcher_pendingPayload = null;
-	    this.$Dispatcher_isDispatching = false;
-	  };
-
-
-	module.exports = Dispatcher;
-
-
-/***/ },
-/* 322 */
+/* 327 */
 /***/ function(module, exports) {
 
-	/**
-	 * Copyright (c) 2014, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule invariant
-	 */
-
-	"use strict";
-
-	/**
-	 * Use invariant() to assert state which your program assumes to be true.
-	 *
-	 * Provide sprintf-style format (only %s is supported) and arguments
-	 * to provide information about what broke and what you were
-	 * expecting.
-	 *
-	 * The invariant message will be stripped in production, but the invariant
-	 * will remain to ensure logic does not differ in production.
-	 */
-
-	var invariant = function(condition, format, a, b, c, d, e, f) {
-	  if (false) {
-	    if (format === undefined) {
-	      throw new Error('invariant requires an error message argument');
-	    }
-	  }
-
-	  if (!condition) {
-	    var error;
-	    if (format === undefined) {
-	      error = new Error(
-	        'Minified exception occurred; use the non-minified dev environment ' +
-	        'for the full error message and additional helpful warnings.'
-	      );
-	    } else {
-	      var args = [a, b, c, d, e, f];
-	      var argIndex = 0;
-	      error = new Error(
-	        'Invariant Violation: ' +
-	        format.replace(/%s/g, function() { return args[argIndex++]; })
-	      );
-	    }
-
-	    error.framesToPop = 1; // we don't care about invariant's own frame
-	    throw error;
-	  }
+	var tokenize = function(string) {
+	  return string.toLowerCase().match(/\w+/g);
 	};
 
-	module.exports = invariant;
+	var flatten = function(arrays) {
+	  var merged = [];
+	  return merged.concat.apply(merged, arrays);
+	};
+
+	var unique = function(array) {
+	  var set = {};
+	  for (var i = 0; i < array.length; i++) {
+	    set[array[i]] = true;
+	  }
+	  return Object.keys(set);
+	};
+
+	var createIndex = function() {
+	  var invertedIndex = {};
+	  var forwardIndex = {};
+	  return {
+	    containsDocument: function(id) {
+	      return (id in forwardIndex);
+	    },
+	    addDocument: function(id, content) {
+	      if (this.containsDocument(id)) {
+		return;
+	      }
+	      var tokens = unique(tokenize(content));
+	      forwardIndex[id] = tokens;
+	      for (var i = 0; i < tokens.length; i++) {
+		var token = tokens[i];
+		var postings = (token in invertedIndex) ? invertedIndex[token] : [];
+		postings.push(id);
+		invertedIndex[token] = postings;
+	      }
+	    },
+	    removeDocument: function(id) {
+	      if (!this.containsDocument(id)) {
+		return;
+	      }
+	      var tokens = forwardIndex[id];
+	      for (var i = 0; i < tokens.length; i++) {
+		var token = tokens[i];
+		var postings = invertedIndex[token];
+		var index = postings.indexOf(token);
+		postings.splice(index, 1);
+	      }
+	      delete forwardIndex[id];
+	    },
+	    terms: function() {
+	      return Object.keys(invertedIndex);
+	    },
+	    search: function(term) {
+	      var lcTerm = term.toLowerCase();
+	      if (lcTerm in invertedIndex) {
+	        return invertedIndex[lcTerm];
+	      } else {
+		return [];
+	      }
+	    },
+	    prefixSearch: function(prefix) {
+	      var prefixLc = prefix.toLowerCase();
+	      var withPrefix = this.terms().filter(function(term) {
+		return term.startsWith(prefixLc);
+	      });
+	      var documentIds = withPrefix.map(this.search);
+	      return unique(flatten(documentIds));
+	    }
+	  };
+	};
+
+	module.exports = createIndex;
 
 
 /***/ },
-/* 323 */
-/***/ function(module, exports) {
-
-	var appConstants = {
-	  ADD_FACTOR: 'ADD_FACTOR',
-	  REMOVE_FACTOR: 'REMOVE_FACTOR',
-	  SEND_MESSAGE: 'SEND_MESSAGE',
-	  CHANGE_EVENT: 'CHANGE'
-	};
-	module.exports = appConstants;
-
-
-/***/ },
-/* 324 */
+/* 328 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var AppDispatcher = __webpack_require__(319);
-	var appConstants = __webpack_require__(323);
+	var React = __webpack_require__(14);
+	var Bootstrap = __webpack_require__(170);
+	var ChatMessage = __webpack_require__(329);
+	var ChatMessages = React.createClass({displayName: "ChatMessages",
+	  componentWillUpdate: function() {
+	    var node = this.getDOMNode();
+	    var innerHeight = $(node).innerHeight();
+	    this.shouldScrollBottom = node.scrollTop + innerHeight >= node.scrollHeight;
+	  },
+	  componentDidUpdate: function() {
+	    if (this.shouldScrollBottom) {
+	      var node = this.getDOMNode();
+	      node.scrollTop = node.scrollHeight;
+	    }
+	  },
+	  render: function() {
+	    var makeMessage = function(message, i) {
+	      return React.createElement(ChatMessage, {key: i, message: message});
+	    };
+	    return (
+	      React.createElement("div", {className: "chatMessages"}, 
+	       this.props.messages.map(makeMessage)
+	      )
+	    );
+	  }
+	});
+	module.exports = ChatMessages;
+
+
+/***/ },
+/* 329 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(14);
+	var Bootstrap = __webpack_require__(170);
+	var ChatMessage = React.createClass({displayName: "ChatMessage",
+	  newlinesToBreaks: function(string) {
+	    var lines = string.split("\n");
+	    var elements = [];
+	    lines.map(function(line, i) {
+	      if (i > 0) {
+		elements.push(React.createElement("br", {key: i}));
+	      } 
+	      elements.push(line);
+	    });
+	    return elements;
+	  },
+	  render: function() {
+	    var message = this.props.message;
+	    var elements = this.newlinesToBreaks(message);
+	    return React.createElement("div", {className: "chatMessage img-rounded"}, elements);
+	  }
+	});
+	module.exports = ChatMessage;
+
+
+/***/ },
+/* 330 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var objectAssign = __webpack_require__(26);
+	var EventEmitter = __webpack_require__(326).EventEmitter;
+	var AppDispatcher = __webpack_require__(317);
+	var appConstants = __webpack_require__(321);
+
+	var _store = {
+	  messages: [ ]
+	};
+
+	var sendMessage = function(message) {
+	  _store.messages.push(message);
+	};
+
+	var chatStore = objectAssign({}, EventEmitter.prototype, {
+	  addChangeListener: function(cb) {
+	    this.on(appConstants.CHANGE_EVENT, cb);
+	  },
+	  removeChangeListener: function(cb) {
+	    this.on(appConstants.CHANGE_EVENT, cb);
+	  },
+	  getMessages: function() {
+	    return _store.messages;
+	  }
+	});
+
+	AppDispatcher.register(function(payload) {
+	  var action = payload.action;
+	  switch(action.actionType) {
+	    case appConstants.SEND_MESSAGE:
+	      sendMessage(action.data);
+	      chatStore.emit(appConstants.CHANGE_EVENT);
+	      break
+	    default:
+	      return true;
+	  };
+	});
+
+	module.exports = chatStore;
+
+
+/***/ },
+/* 331 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var AppDispatcher = __webpack_require__(317);
+	var appConstants = __webpack_require__(321);
 
 	var chatActions = {
 	  sendMessage: function(message) {
@@ -42285,14 +43898,14 @@
 
 
 /***/ },
-/* 325 */
+/* 332 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
-	var AddFactor = __webpack_require__(326);
-	var FactorList = __webpack_require__(327);
-	var factorStore = __webpack_require__(328);
-	var factorActions = __webpack_require__(329);
+	var AddFactor = __webpack_require__(333);
+	var FactorList = __webpack_require__(334);
+	var factorStore = __webpack_require__(325);
+	var factorActions = __webpack_require__(316);
 
 	var FactorContainer = React.createClass({displayName: "FactorContainer",
 	  getInitialState: function() {
@@ -42332,7 +43945,7 @@
 
 
 /***/ },
-/* 326 */
+/* 333 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
@@ -42370,7 +43983,7 @@
 
 
 /***/ },
-/* 327 */
+/* 334 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
@@ -42390,83 +44003,6 @@
 	  }
 	});
 	module.exports = FactorList;
-
-
-/***/ },
-/* 328 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var objectAssign = __webpack_require__(26);
-	var EventEmitter = __webpack_require__(318).EventEmitter;
-	var AppDispatcher = __webpack_require__(319);
-	var appConstants = __webpack_require__(323);
-
-	var _store = {
-	  factors: []
-	};
-
-	var addFactor = function(factor) {
-	  _store.factors.push(factor);
-	};
-
-	var removeFactor = function(index) {
-	  _store.factors.splice(index, 1);
-	};
-
-	var factorStore = objectAssign({}, EventEmitter.prototype, {
-	  addChangeListener: function(cb) {
-	    this.on(appConstants.CHANGE_EVENT, cb);
-	  },
-	  removeChangeListener: function(cb) {
-	    this.removeListener(appConstants.CHANGE_EVENT, cb);
-	  },
-	  getFactors: function() {
-	    return _store.factors;
-	  }
-	});
-
-	AppDispatcher.register(function(payload) {
-	  var action = payload.action;
-	  switch(action.actionType) {
-	    case appConstants.ADD_FACTOR:
-	      addFactor(action.data);
-	      factorStore.emit(appConstants.CHANGE_EVENT);
-	      break;
-	    case appConstants.REMOVE_FACTOR:
-	      removeFactor(action.data);
-	      factorStore.emit(appConstants.CHANGE_EVENT);
-	      break;
-	    default:
-	      return true;
-	  };
-	});
-
-	module.exports = factorStore;
-
-
-/***/ },
-/* 329 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var AppDispatcher = __webpack_require__(319);
-	var appConstants = __webpack_require__(323);
-
-	var factorActions = {
-	  addFactor: function(factor) {
-	    AppDispatcher.handleAction({
-	      actionType: appConstants.ADD_FACTOR,
-	      data: factor
-	    });
-	  },
-	  removeFactor: function(index) {
-	    AppDispatcher.handleAction({
-	      actionType: appConstants.REMOVE_FACTOR,
-	      data: index
-	    });
-	  }
-	};
-
-	module.exports = factorActions;
 
 
 /***/ }
