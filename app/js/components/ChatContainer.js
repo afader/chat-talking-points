@@ -1,6 +1,7 @@
 var React = require('react');
 var ChatInput = require('./ChatInput.js');
 var ChatMessages = require('./ChatMessages.js');
+var ChatContextMenu = require('./ChatContextMenu.js');
 var chatStore = require('../stores/chatStore.js');
 var chatActions = require('../actions/chatActions.js');
 
@@ -30,6 +31,7 @@ var ChatContainer = React.createClass({
 	<h3>Chat Room</h3>
 	<ChatMessages messages={this.state.messages}/>
 	<ChatInput send={this.handleSendMessage}/>
+	<ChatContextMenu/>
       </div>
     );
   }
