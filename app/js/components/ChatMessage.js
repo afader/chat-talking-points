@@ -6,7 +6,7 @@ var ChatMessage = React.createClass({
     var elements = [];
     lines.map(function(line, i) {
       if (i > 0) {
-	elements.push(<br/>);
+	elements.push(<br key={i}/>);
       } 
       elements.push(line);
     });

@@ -1,7 +1,7 @@
 .chatContainer {
   display: flex;
   flex-flow: column;
-  height: 100vh;
+  height: 80vh;
 }
 
 .chatMessages {
@@ -45,4 +45,10 @@
 
 .sendButton {
   resize: none;
+}
+
+#chatContextMenu {
+  position: absolute;
+  display: none;
+  background-color: red;
 }
