@@ -5,7 +5,9 @@ var ChatMessages = React.createClass({
   componentWillUpdate: function() {
     var node = this.getDOMNode();
     var innerHeight = $(node).innerHeight();
-    this.shouldScrollBottom = node.scrollTop + innerHeight >= node.scrollHeight;
+    var position = node.scrollTop + innerHeight;
+    var fudgeHeight = 10;
+    this.shouldScrollBottom = position + fudgeHeight >= node.scrollHeight;
   },
   componentDidUpdate: function() {
     if (this.shouldScrollBottom) {
