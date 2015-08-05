@@ -19,6 +19,7 @@
   padding: 8px;
   margin: 10px;
   max-width: 80%;
+  min-width: 40px;
   position: relative;
 }
 
