@@ -2,7 +2,7 @@ require('jquery-textcomplete');
 var factorStore = require('./stores/factorStore.js');
 
 var strategy = {
-  match: /\B#(\w*)$/,
+  match: /(?:\B|^)#(\w*)$/,
   search: function(term, callback) {
     callback(factorStore.factorsStartingWith(term));
   },
