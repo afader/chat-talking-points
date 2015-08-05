@@ -42087,7 +42087,7 @@
 	var factorStore = __webpack_require__(325);
 
 	var strategy = {
-	  match: /\B#(\w*)$/,
+	  match: /(?:\B|^)#(\w*)$/,
 	  search: function(term, callback) {
 	    callback(factorStore.factorsStartingWith(term));
 	  },
