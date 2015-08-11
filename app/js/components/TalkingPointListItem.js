@@ -4,9 +4,9 @@ var ListGroupItem = Bootstrap.ListGroupItem;
 var talkingPointStore = require('../stores/talkingPointStore.js');
 var TalkingPointListItem = React.createClass({
   render: function() {
-    var text = this.props.text;
-    var index = this.props.index;
-    var active = talkingPointStore.indexIsHighlighted(index);
+    var id = this.props.id;
+    var text = talkingPointStore.getTalkingPointContent(id);
+    var active = talkingPointStore.idIsHighlighted(id);
     return <ListGroupItem active={active}>{text}</ListGroupItem>;
   }
 });

@@ -4,13 +4,14 @@ var AppDispatcher = require('../dispatcher/AppDispatcher.js');
 var appConstants = require('../constants/appConstants.js');
 var invertedIndex = require('../invertedIndex.js');
 
+// This controls the number of tokens used to create a talking point id
 var numIdTokens = 5;
 
 var _store = {
-  talkingPoints: [],
+  talkingPoints: {},
+  talkingPointList: [],
   index: invertedIndex.createIndex(),
-  talkingPointIds: [],
-  highlightedIndex: null
+  highlightedId: null
 };
 
 var formId = function(prefix, suffix) {
@@ -19,7 +20,7 @@ var formId = function(prefix, suffix) {
 
 var idExists = function(prefix, suffix) {
   var id = formId(prefix, suffix);
-  return _store.talkingPointIds.indexOf(id) >= 0;
+  return id in _store.talkingPoints;
 };
 
 var createTalkingPointId = function(string) {
@@ -33,25 +34,25 @@ var createTalkingPointId = function(string) {
 };
 
 var addTalkingPoint = function(talkingPoint) {
-  var index = _store.talkingPoints.length;
   var id = createTalkingPointId(talkingPoint);
-  _store.talkingPoints.push(talkingPoint);
-  _store.talkingPointIds[index] = id;
-  _store.index.addDocument(index, talkingPoint);
+  _store.talkingPoints[id] = talkingPoint;
+  _store.talkingPointList.push(id);
+  _store.index.addDocument(id, talkingPoint);
 };
 
-var removeTalkingPoint = function(index) {
-  _store.talkingPoints.splice(index, 1);
-  _store.index.removeDocument(index);
-  _store.talkingPointIds.splice(index, 1);
+var removeTalkingPoint = function(id) {
+  delete _store[id];
+  var index = _store.talkingPointList.indexOf(id);
+  _store.talkingPointList.splice(index, 1);
+  _store.index.removeDocument(id);
 };
 
-var highlightTalkingPoint = function(index) {
-  _store.highlightedIndex = index;
+var highlightTalkingPoint = function(id) {
+  _store.highlightedId = id;
 };
 
 var clearTalkingPointHighlight = function() {
-  _store.highlightedIndex = null;
+  _store.highlightedId = null;
 };
 
 var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
@@ -61,24 +62,30 @@ var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
   removeChangeListener: function(cb) {
     this.removeListener(appConstants.CHANGE_EVENT, cb);
   },
-  getTalkingPoints: function() {
-    return _store.talkingPoints;
+  getTalkingPointList: function() {
+    return _store.talkingPointList;
   },
   talkingPointsStartingWith: function(prefix) {
     return _store.index.prefixSearch(prefix);
   },
   getTalkingPointIds: function() {
-    return _store.talkingPointIds;
+    return Object.keys(_store.talkingPoints);
   },
-  indexIsHighlighted: function(index) {
-    return index != null && _store.highlightedIndex == index;
+  idIsHighlighted: function(id) {
+    return _store.highlightedId == id;
   },
-  hasTalkingPointWithId: function(id) {
-    return this.indexForId(id) >= 0;
+  getTalkingPointContent: function(id) {
+    return _store.talkingPoints[id];
   },
-  indexForId: function(id) {
-    return _store.talkingPointIds.indexOf(id);
+  getTalkingPointListIndex: function(id) {
+    return _store.talkingPointList.indexOf(id);
   },
+  hasId: function(id) {
+    return id in _store.talkingPoints;
+  },
+  getTalkingPointContent: function(id) {
+    return _store.talkingPoints[id];
+  }
 });
 
 AppDispatcher.register(function(payload) {

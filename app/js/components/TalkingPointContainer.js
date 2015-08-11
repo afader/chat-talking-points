@@ -7,7 +7,7 @@ var talkingPointActions = require('../actions/talkingPointActions.js');
 var TalkingPointContainer = React.createClass({
   getInitialState: function() {
     return {
-      talkingPoints: talkingPointStore.getTalkingPoints()
+      talkingPoints: talkingPointStore.getTalkingPointList()
     };
   },
   componentDidMount: function() {
@@ -24,7 +24,7 @@ var TalkingPointContainer = React.createClass({
   },
   _onChange: function() {
     this.setState({
-      talkingPoints: talkingPointStore.getTalkingPoints()
+      talkingPoints: talkingPointStore.getTalkingPointList()
     });
   },
   render: function() {

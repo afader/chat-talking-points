@@ -7,12 +7,10 @@ var strategy = {
     callback(talkingPointStore.talkingPointsStartingWith(term));
   },
   template: function(value) {
-    return talkingPointStore.getTalkingPoints()[value];
+    return talkingPointStore.getTalkingPointContent(value);
   },
   replace: function(value) {
-    var names = talkingPointStore.getTalkingPointIds();
-    var name = names[value];
-    return '#' + name + ' ';
+    return '#' + value + ' ';
   },
   index: 1
 };

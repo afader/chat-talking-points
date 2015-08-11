@@ -3,13 +3,10 @@ var talkingPointActions = require('../actions/talkingPointActions.js');
 var talkingPointStore = require('../stores/talkingPointStore.js');
 var TalkingPointRef = React.createClass({
   getInitialState: function() {
-    return {index: talkingPointStore.indexForId(this.props.id)};
+    return {hasReferant: talkingPointStore.hasId(this.props.id)};
   },
   _onChange: function() {
-    this.setState({index: talkingPointStore.indexForId(this.props.id)});
-  },
-  hasReferant: function() {
-    return this.state.index >= 0;
+    this.setState({hasReferant: talkingPointStore.hasId(this.props.id)});
   },
   handleClick: function(e) {
     e.preventDefault();
@@ -22,14 +19,14 @@ var TalkingPointRef = React.createClass({
     talkingPointStore.removeChangeListener(this._onChange);                     
   },
   handleMouseOver: function(e) {
-    talkingPointActions.highlightTalkingPoint(this.state.index);
+    talkingPointActions.highlightTalkingPoint(this.props.id);
   },
   handleMouseOut: function(e) {
     talkingPointActions.clearTalkingPointHighlight();
   },
   render: function() {
     var content = '#' + this.props.id;
-    if (this.hasReferant()) {
+    if (this.state.hasReferant) {
       var props = {
         'href': '#',
         onClick: this.handleClick,

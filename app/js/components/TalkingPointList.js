@@ -4,8 +4,8 @@ var ListGroup = Bootstrap.ListGroup;
 var TalkingPointListItem = require('./TalkingPointListItem.js');
 var TalkingPointList = React.createClass({
   render: function() {
-    var makeTalkingPoint = function(item, i) {
-      return <TalkingPointListItem key={i} text={item} index={i}/>;
+    var makeTalkingPoint = function(id, i) {
+      return <TalkingPointListItem key={id} id={id}/>;
     };
     return (
       <ListGroup>
