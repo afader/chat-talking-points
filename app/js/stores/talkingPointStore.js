@@ -41,7 +41,7 @@ var addTalkingPoint = function(talkingPoint) {
 };
 
 var removeTalkingPoint = function(id) {
-  delete _store[id];
+  delete _store.talkingPoints[id];
   var index = _store.talkingPointList.indexOf(id);
   _store.talkingPointList.splice(index, 1);
   _store.index.removeDocument(id);

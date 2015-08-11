@@ -8,16 +8,16 @@ var talkingPointActions = {
       data: talkingPoint
     });
   },
-  removeTalkingPoint: function(index) {
+  removeTalkingPoint: function(id) {
     AppDispatcher.handleAction({
       actionType: appConstants.REMOVE_TALKING_POINT,
-      data: index
+      data: id 
     });
   },
-  highlightTalkingPoint: function(index) {
+  highlightTalkingPoint: function(id) {
     AppDispatcher.handleAction({
       actionType: appConstants.HIGHLIGHT_TALKING_POINT,
-      data: index
+      data: id 
     });
   },
   clearTalkingPointHighlight: function() {
