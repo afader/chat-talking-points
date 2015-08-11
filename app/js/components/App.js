@@ -4,7 +4,7 @@ var Col = Bootstrap.Col;
 var Row = Bootstrap.Row;
 var Grid = Bootstrap.Grid;
 var ChatContainer = require('./ChatContainer.js');
-var FactorContainer = require('./FactorContainer.js');
+var TalkingPointContainer = require('./TalkingPointContainer.js');
 
 var App = React.createClass({
   render: function() {
@@ -15,7 +15,7 @@ var App = React.createClass({
 	    <ChatContainer/>
 	  </Col>
 	  <Col md={4}>
-	    <FactorContainer/>
+	    <TalkingPointContainer/>
 	  </Col>
 	</Row>
       </Grid>

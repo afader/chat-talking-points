@@ -1,13 +1,13 @@
 require('jquery-textcomplete');
-var factorStore = require('./stores/factorStore.js');
+var talkingPointStore = require('./stores/talkingPointStore.js');
 
 var strategy = {
   match: /(?:\B|^)#(\w*)$/,
   search: function(term, callback) {
-    callback(factorStore.factorsStartingWith(term));
+    callback(talkingPointStore.talkingPointsStartingWith(term));
   },
   template: function(value) {
-    return factorStore.getFactors()[value];
+    return talkingPointStore.getTalkingPoints()[value];
   },
   replace: function(value) {
     return '#' + value + ' ';

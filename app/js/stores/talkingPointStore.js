@@ -5,32 +5,32 @@ var appConstants = require('../constants/appConstants.js');
 var InvertedIndex = require('../InvertedIndex.js');
 
 var _store = {
-  factors: [],
+  talkingPoints: [],
   index: new InvertedIndex()
 };
 
-var addFactor = function(factor) {
-  var index = _store.factors.length;
-  _store.factors.push(factor);
-  _store.index.addDocument(index, factor);
+var addTalkingPoint = function(talkingPoint) {
+  var index = _store.talkingPoints.length;
+  _store.talkingPoints.push(talkingPoint);
+  _store.index.addDocument(index, talkingPoint);
 };
 
-var removeFactor = function(index) {
-  _store.factors.splice(index, 1);
+var removeTalkingPoint = function(index) {
+  _store.talkingPoints.splice(index, 1);
   _store.index.removeDocument(index);
 };
 
-var factorStore = objectAssign({}, EventEmitter.prototype, {
+var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
   addChangeListener: function(cb) {
     this.on(appConstants.CHANGE_EVENT, cb);
   },
   removeChangeListener: function(cb) {
     this.removeListener(appConstants.CHANGE_EVENT, cb);
   },
-  getFactors: function() {
-    return _store.factors;
+  getTalkingPoints: function() {
+    return _store.talkingPoints;
   },
-  factorsStartingWith: function(prefix) {
+  talkingPointsStartingWith: function(prefix) {
     return _store.index.prefixSearch(prefix);
   }
 });
@@ -38,17 +38,17 @@ var factorStore = objectAssign({}, EventEmitter.prototype, {
 AppDispatcher.register(function(payload) {
   var action = payload.action;
   switch(action.actionType) {
-    case appConstants.ADD_FACTOR:
-      addFactor(action.data);
-      factorStore.emit(appConstants.CHANGE_EVENT);
+    case appConstants.ADD_TALKING_POINT:
+      addTalkingPoint(action.data);
+      talkingPointStore.emit(appConstants.CHANGE_EVENT);
       break;
-    case appConstants.REMOVE_FACTOR:
-      removeFactor(action.data);
-      factorStore.emit(appConstants.CHANGE_EVENT);
+    case appConstants.REMOVE_TALKING_POINT:
+      removeTalkingPoint(action.data);
+      talkingPointStore.emit(appConstants.CHANGE_EVENT);
       break;
     default:
       return true;
   };
 });
 
-module.exports = factorStore;
+module.exports = talkingPointStore;
