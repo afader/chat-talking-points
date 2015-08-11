@@ -54,7 +54,7 @@
 	var React = __webpack_require__(14);
 	React.render(React.createElement(App, null), document.body);
 
-	__webpack_require__(335);
+	__webpack_require__(338);
 
 
 /***/ },
@@ -9674,7 +9674,7 @@
 	var Row = Bootstrap.Row;
 	var Grid = Bootstrap.Grid;
 	var ChatContainer = __webpack_require__(313);
-	var FactorContainer = __webpack_require__(332);
+	var TalkingPointContainer = __webpack_require__(334);
 
 	var App = React.createClass({displayName: "App",
 	  render: function() {
@@ -9685,7 +9685,7 @@
 		    React.createElement(ChatContainer, null)
 		  ), 
 		  React.createElement(Col, {md: 4}, 
-		    React.createElement(FactorContainer, null)
+		    React.createElement(TalkingPointContainer, null)
 		  )
 		)
 	      )
@@ -41406,8 +41406,8 @@
 	var ChatInput = __webpack_require__(322);
 	var ChatMessages = __webpack_require__(328);
 	var ChatContextMenu = __webpack_require__(314);
-	var chatStore = __webpack_require__(330);
-	var chatActions = __webpack_require__(331);
+	var chatStore = __webpack_require__(332);
+	var chatActions = __webpack_require__(333);
 
 	var ChatContainer = React.createClass({displayName: "ChatContainer",
 	  getInitialState: function() {
@@ -41451,22 +41451,22 @@
 	var React = __webpack_require__(14);
 	var Bootstrap = __webpack_require__(170);
 	var context = __webpack_require__(315);
-	var factorActions = __webpack_require__(316);
-	var selectedTextToFactor = function(e) {
+	var talkingPointActions = __webpack_require__(316);
+	var selectedTextToTalkingPoint = function(e) {
 	  if (e) {
 	    e.preventDefault();
 	  }
 	  if (window.getSelection) {
 	    var text = window.getSelection().toString();
-	    factorActions.addFactor(text);
+	    talkingPointActions.addTalkingPoint(text);
 	  }
 	};
 	var ChatContextMenu = React.createClass({displayName: "ChatContextMenu",
 	  componentDidMount: function() {
 	    context.init({fadeSpeed: 0});
 	    context.attach('.chatMessage', [{
-	      text: 'Add to Factors',
-	      action: selectedTextToFactor
+	      text: 'Add to Talking Points',
+	      action: selectedTextToTalkingPoint
 	    }]);
 	  },
 	  render: function() {
@@ -41630,22 +41630,34 @@
 	var AppDispatcher = __webpack_require__(317);
 	var appConstants = __webpack_require__(321);
 
-	var factorActions = {
-	  addFactor: function(factor) {
+	var talkingPointActions = {
+	  addTalkingPoint: function(talkingPoint) {
 	    AppDispatcher.handleAction({
-	      actionType: appConstants.ADD_FACTOR,
-	      data: factor
+	      actionType: appConstants.ADD_TALKING_POINT,
+	      data: talkingPoint
 	    });
 	  },
-	  removeFactor: function(index) {
+	  removeTalkingPoint: function(id) {
 	    AppDispatcher.handleAction({
-	      actionType: appConstants.REMOVE_FACTOR,
-	      data: index
+	      actionType: appConstants.REMOVE_TALKING_POINT,
+	      data: id 
+	    });
+	  },
+	  highlightTalkingPoint: function(id) {
+	    AppDispatcher.handleAction({
+	      actionType: appConstants.HIGHLIGHT_TALKING_POINT,
+	      data: id 
+	    });
+	  },
+	  clearTalkingPointHighlight: function() {
+	    AppDispatcher.handleAction({
+	      actionType: appConstants.CLEAR_TALKING_POINT_HIGHLIGHT,
+	      data: null
 	    });
 	  }
 	};
 
-	module.exports = factorActions;
+	module.exports = talkingPointActions;
 
 
 /***/ },
@@ -42001,8 +42013,10 @@
 /***/ function(module, exports) {
 
 	var appConstants = {
-	  ADD_FACTOR: 'ADD_FACTOR',
-	  REMOVE_FACTOR: 'REMOVE_FACTOR',
+	  ADD_TALKING_POINT: 'ADD_TALKING_POINT',
+	  REMOVE_TALKING_POINT: 'REMOVE_TALKING_POINT',
+	  HIGHLIGHT_TALKING_POINT: 'HIGHLIGHT_TALKING_POINT',
+	  CLEAR_TALKING_POINT_HIGHLIGHT: 'CLEAR_TALKING_POINT_HIGHLIGHT',
 	  SEND_MESSAGE: 'SEND_MESSAGE',
 	  CHANGE_EVENT: 'CHANGE'
 	};
@@ -42015,7 +42029,7 @@
 
 	var React = __webpack_require__(14);
 	var Bootstrap = __webpack_require__(170);
-	var factorTextcomplete = __webpack_require__(323);
+	var talkingPointTextcomplete = __webpack_require__(323);
 	var Button = Bootstrap.Button;
 	var Input = Bootstrap.Input;
 	var ChatInput = React.createClass({displayName: "ChatInput",
@@ -42054,7 +42068,7 @@
 	    this.preventSubmit = false;
 	    var node = this.getDOMNode();
 	    var $input = $(node).find('textarea');
-	    factorTextcomplete($input);
+	    talkingPointTextcomplete($input);
 	    $input.on('textComplete:select', this.textcompleteSelect);
 	  },
 	  render: function() {
@@ -42085,15 +42099,15 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(324);
-	var factorStore = __webpack_require__(325);
+	var talkingPointStore = __webpack_require__(325);
 
 	var strategy = {
 	  match: /(?:\B|^)#(\w*)$/,
 	  search: function(term, callback) {
-	    callback(factorStore.factorsStartingWith(term));
+	    callback(talkingPointStore.talkingPointsStartingWith(term));
 	  },
 	  template: function(value) {
-	    return factorStore.getFactors()[value];
+	    return talkingPointStore.getTalkingPointContent(value);
 	  },
 	  replace: function(value) {
 	    return '#' + value + ' ';
@@ -43337,56 +43351,117 @@
 	var EventEmitter = __webpack_require__(326).EventEmitter;
 	var AppDispatcher = __webpack_require__(317);
 	var appConstants = __webpack_require__(321);
-	var InvertedIndex = __webpack_require__(327);
+	var invertedIndex = __webpack_require__(327);
+
+	// This controls the number of tokens used to create a talking point id
+	var numIdTokens = 5;
 
 	var _store = {
-	  factors: [],
-	  index: new InvertedIndex()
+	  talkingPoints: {},
+	  talkingPointList: [],
+	  index: invertedIndex.createIndex(),
+	  highlightedId: null
 	};
 
-	var addFactor = function(factor) {
-	  var index = _store.factors.length;
-	  _store.factors.push(factor);
-	  _store.index.addDocument(index, factor);
+	var formId = function(prefix, suffix) {
+	  return suffix ? prefix + '-' + suffix : prefix;
 	};
 
-	var removeFactor = function(index) {
-	  _store.factors.splice(index, 1);
-	  _store.index.removeDocument(index);
+	var idExists = function(prefix, suffix) {
+	  var id = formId(prefix, suffix);
+	  return id in _store.talkingPoints;
 	};
 
-	var factorStore = objectAssign({}, EventEmitter.prototype, {
+	var createTalkingPointId = function(string) {
+	  var tokens = invertedIndex.tokenize(string.toLowerCase());
+	  var idPrefix = tokens.slice(0, numIdTokens).join('-');
+	  var idSuffix = null;
+	  while (idExists(idPrefix, idSuffix)) {
+	    idSuffix += 1;
+	  }
+	  return formId(idPrefix, idSuffix);
+	};
+
+	var addTalkingPoint = function(talkingPoint) {
+	  var id = createTalkingPointId(talkingPoint);
+	  _store.talkingPoints[id] = talkingPoint;
+	  _store.talkingPointList.push(id);
+	  _store.index.addDocument(id, talkingPoint);
+	};
+
+	var removeTalkingPoint = function(id) {
+	  delete _store.talkingPoints[id];
+	  var index = _store.talkingPointList.indexOf(id);
+	  _store.talkingPointList.splice(index, 1);
+	  _store.index.removeDocument(id);
+	};
+
+	var highlightTalkingPoint = function(id) {
+	  _store.highlightedId = id;
+	};
+
+	var clearTalkingPointHighlight = function() {
+	  _store.highlightedId = null;
+	};
+
+	var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
 	  addChangeListener: function(cb) {
 	    this.on(appConstants.CHANGE_EVENT, cb);
 	  },
 	  removeChangeListener: function(cb) {
 	    this.removeListener(appConstants.CHANGE_EVENT, cb);
 	  },
-	  getFactors: function() {
-	    return _store.factors;
+	  getTalkingPointList: function() {
+	    return _store.talkingPointList;
 	  },
-	  factorsStartingWith: function(prefix) {
+	  talkingPointsStartingWith: function(prefix) {
 	    return _store.index.prefixSearch(prefix);
+	  },
+	  getTalkingPointIds: function() {
+	    return Object.keys(_store.talkingPoints);
+	  },
+	  idIsHighlighted: function(id) {
+	    return _store.highlightedId == id;
+	  },
+	  getTalkingPointContent: function(id) {
+	    return _store.talkingPoints[id];
+	  },
+	  getTalkingPointListIndex: function(id) {
+	    return _store.talkingPointList.indexOf(id);
+	  },
+	  hasId: function(id) {
+	    return id in _store.talkingPoints;
+	  },
+	  getTalkingPointContent: function(id) {
+	    return _store.talkingPoints[id];
 	  }
 	});
 
 	AppDispatcher.register(function(payload) {
 	  var action = payload.action;
 	  switch(action.actionType) {
-	    case appConstants.ADD_FACTOR:
-	      addFactor(action.data);
-	      factorStore.emit(appConstants.CHANGE_EVENT);
+	    case appConstants.ADD_TALKING_POINT:
+	      addTalkingPoint(action.data);
+	      talkingPointStore.emit(appConstants.CHANGE_EVENT);
 	      break;
-	    case appConstants.REMOVE_FACTOR:
-	      removeFactor(action.data);
-	      factorStore.emit(appConstants.CHANGE_EVENT);
+	    case appConstants.REMOVE_TALKING_POINT:
+	      removeTalkingPoint(action.data);
+	      talkingPointStore.emit(appConstants.CHANGE_EVENT);
+	      break;
+	    case appConstants.HIGHLIGHT_TALKING_POINT:
+	      highlightTalkingPoint(action.data);
+	      talkingPointStore.emit(appConstants.CHANGE_EVENT);
+	      break;
+	    case appConstants.CLEAR_TALKING_POINT_HIGHLIGHT:
+	      clearTalkingPointHighlight();
+	      talkingPointStore.emit(appConstants.CHANGE_EVENT);
 	      break;
 	    default:
 	      return true;
 	  };
 	});
 
-	module.exports = factorStore;
+	module.exports = talkingPointStore;
 
 
 /***/ },
@@ -43772,7 +43847,10 @@
 	  };
 	};
 
-	module.exports = createIndex;
+	module.exports = {
+	  createIndex: createIndex,
+	  tokenize: tokenize
+	}
 
 
 /***/ },
@@ -43815,22 +43893,25 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
-	var Bootstrap = __webpack_require__(170);
+	var TalkingPointRef = __webpack_require__(330);
+	var chatMessageParser = __webpack_require__(331);
 	var ChatMessage = React.createClass({displayName: "ChatMessage",
-	  newlinesToBreaks: function(string) {
-	    var lines = string.split("\n");
-	    var elements = [];
-	    lines.map(function(line, i) {
-	      if (i > 0) {
-		elements.push(React.createElement("br", {key: i}));
-	      } 
-	      elements.push(line);
-	    });
-	    return elements;
+	  renderMessagePart: function(part, key) {
+	    switch(part.type) {
+	      case chatMessageParser.partTypes.PLAIN:
+		return part.content;
+	      case chatMessageParser.partTypes.BREAK:
+		return React.createElement("br", {key: key});
+	      case chatMessageParser.partTypes.TALKING_POINT:
+		return React.createElement(TalkingPointRef, {id: part.id, key: key});
+	      default:
+		throw 'Unknown message part type: ' + part.type;
+	    };
 	  },
 	  render: function() {
 	    var message = this.props.message;
-	    var elements = this.newlinesToBreaks(message);
+	    var messageParts = chatMessageParser.parse(message);
+	    var elements = messageParts.map(this.renderMessagePart);
 	    return React.createElement("div", {className: "chatMessage img-rounded"}, elements);
 	  }
 	});
@@ -43839,6 +43920,154 @@
 
 /***/ },
 /* 330 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(14);
+	var talkingPointActions = __webpack_require__(316);
+	var talkingPointStore = __webpack_require__(325);
+	var TalkingPointRef = React.createClass({displayName: "TalkingPointRef",
+	  getInitialState: function() {
+	    return {hasReferant: talkingPointStore.hasId(this.props.id)};
+	  },
+	  _onChange: function() {
+	    this.setState({hasReferant: talkingPointStore.hasId(this.props.id)});
+	  },
+	  handleClick: function(e) {
+	    e.preventDefault();
+	    $(this.getDOMNode()).blur(); // make :hover etc. still work
+	  },
+	  componentDidMount: function() {                                               
+	    talkingPointStore.addChangeListener(this._onChange);                        
+	  },                                                                            
+	  componentWillUnmount: function() {                                            
+	    talkingPointStore.removeChangeListener(this._onChange);                     
+	  },
+	  handleMouseOver: function(e) {
+	    talkingPointActions.highlightTalkingPoint(this.props.id);
+	  },
+	  handleMouseOut: function(e) {
+	    talkingPointActions.clearTalkingPointHighlight();
+	  },
+	  render: function() {
+	    var content = '#' + this.props.id;
+	    if (this.state.hasReferant) {
+	      var props = {
+	        'href': '#',
+	        onClick: this.handleClick,
+	        onMouseOver: this.handleMouseOver,
+	        onMouseOut: this.handleMouseOut
+	      };
+	      return React.createElement("a", React.__spread({},  props), content);
+	    } else {
+	      return React.createElement("span", null, content);
+	    }
+	  }
+	});
+	module.exports = TalkingPointRef;
+
+
+/***/ },
+/* 331 */
+/***/ function(module, exports) {
+
+	// Applies f to each element of array, then flattens
+	var flatMap = function(array, f) { 
+	  return Array.prototype.concat.apply([], array.map(f)); 
+	};
+
+	// The different parts of a parsed chat message
+	var partTypes = {
+	  PLAIN: 'PLAIN',                 // plain text message
+	  BREAK: 'BREAK',                 // line break
+	  TALKING_POINT: 'TALKING_POINT'  // reference to a talking point
+	};
+
+	var breakPart = function() {
+	  return {type: partTypes.BREAK};
+	}
+
+	var plainPart = function(content) {
+	  return {
+	    type: partTypes.PLAIN,
+	    content: content
+	  }
+	};
+
+	var talkingPointPart = function(id, start, end) {
+	  return {
+	    id: id,
+	    type: partTypes.TALKING_POINT,
+	    start: start,
+	    end: end
+	  };
+	};
+
+	// Returns an array of message parts. Splits plain text message parts into
+	// plain parts and break parts.
+	var splitBreaks = function(part) {
+	  if (part.type != partTypes.PLAIN) return [part];
+	  var text = part.content;
+	  var lines = text.split('\n');
+	  var result = [];
+	  for (var i = 0; i < lines.length; i++) {
+	    if (i > 0) {
+	      result.push(breakPart());
+	    }
+	    result.push(plainPart(lines[i]));
+	  };
+	  return result;
+	};
+
+	// Returns an array of message parts. Searches through the contents of plain
+	// text message parts for references to talking points. 
+	var findTalkingPoints = function(part) {
+	  if (part.type != partTypes.PLAIN) return [part];
+	  var tpPattern = /#([\w-]+)/g;
+	  var text = part.content;
+	  var match = tpPattern.exec(text);
+	  var tps = [];
+	  while (match != null) {
+	    var tpId = match[1];
+	    var start = match.index;
+	    var end = start + tpId.length + 1;
+	    var tp = talkingPointPart(tpId, start, end);
+	    tps.push(tp);
+	    match = tpPattern.exec(text);
+	  };
+	  if (tps.length == 0) {
+	    return [plainPart(text)];
+	  } else {
+	    var result = [];
+	    var prevEnd = 0;
+	    for (var i = 0; i < tps.length; i++) {
+	      var tp = tps[i];
+	      if (tp.start > 0) {
+		var leftText = text.slice(prevEnd, tp.start);
+		result.push(plainPart(leftText));
+	      }
+	      result.push(tp);
+	      prevEnd = tp.end;
+	    }
+	    var rightText = text.slice(prevEnd);
+	    result.push(plainPart(rightText));
+	    return result;
+	  }
+	};
+
+	var parse = function(text) {
+	  var withBreaks = splitBreaks(plainPart(text));
+	  var withTps = flatMap(withBreaks, findTalkingPoints); 
+	  return withTps;
+	};
+
+	module.exports = {
+	  parse: parse,
+	  partTypes: partTypes
+	};
+
+
+/***/ },
+/* 332 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var objectAssign = __webpack_require__(26);
@@ -43882,7 +44111,7 @@
 
 
 /***/ },
-/* 331 */
+/* 333 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var AppDispatcher = __webpack_require__(317);
@@ -43901,61 +44130,61 @@
 
 
 /***/ },
-/* 332 */
+/* 334 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
-	var AddFactor = __webpack_require__(333);
-	var FactorList = __webpack_require__(334);
-	var factorStore = __webpack_require__(325);
-	var factorActions = __webpack_require__(316);
+	var AddTalkingPoint = __webpack_require__(335);
+	var TalkingPointList = __webpack_require__(336);
+	var talkingPointStore = __webpack_require__(325);
+	var talkingPointActions = __webpack_require__(316);
 
-	var FactorContainer = React.createClass({displayName: "FactorContainer",
+	var TalkingPointContainer = React.createClass({displayName: "TalkingPointContainer",
 	  getInitialState: function() {
 	    return {
-	      factors: factorStore.getFactors()
+	      talkingPoints: talkingPointStore.getTalkingPointList()
 	    };
 	  },
 	  componentDidMount: function() {
-	    factorStore.addChangeListener(this._onChange);
+	    talkingPointStore.addChangeListener(this._onChange);
 	  },
 	  componentWillUnmount: function() {
-	    factorStore.removeChangeListener(this._onChange);
+	    talkingPointStore.removeChangeListener(this._onChange);
 	  },
-	  handleAddFactor: function(newFactor) {
-	    factorActions.addFactor(newFactor);
+	  handleAddTalkingPoint: function(newTalkingPoint) {
+	    talkingPointActions.addTalkingPoint(newTalkingPoint);
 	  },
-	  handleRemoveFactor: function(index) {
-	    factorActions.removeFactor(index);
+	  handleRemoveTalkingPoint: function(index) {
+	    talkingPointActions.removeTalkingPoint(index);
 	  },
 	  _onChange: function() {
 	    this.setState({
-	      factors: factorStore.getFactors()
+	      talkingPoints: talkingPointStore.getTalkingPointList()
 	    });
 	  },
 	  render: function() {
 	    return (
 	      React.createElement("div", null, 
-		React.createElement("h3", null, "Factors"), 
-		React.createElement(FactorList, {factors: this.state.factors, remove: this.handleRemoveFactor}), 
-		React.createElement(AddFactor, {add: this.handleAddFactor})
+		React.createElement("h3", null, "Talking Points"), 
+		React.createElement(TalkingPointList, {talkingPoints: this.state.talkingPoints, remove: this.handleRemoveTalkingPoint}), 
+		React.createElement(AddTalkingPoint, {add: this.handleAddTalkingPoint})
 	      )
 	    );
 	  }
 	});
 
-	module.exports = FactorContainer;
+	module.exports = TalkingPointContainer;
 
 
 /***/ },
-/* 333 */
+/* 335 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
 	var Bootstrap = __webpack_require__(170);
 	var Button = Bootstrap.Button;
 	var Input = Bootstrap.Input;
-	var AddFactor = React.createClass({displayName: "AddFactor",
+	var AddTalkingPoint = React.createClass({displayName: "AddTalkingPoint",
 	  getInitialState: function() {
 	    return {value: ''};
 	  },
@@ -43973,7 +44202,7 @@
 	      buttonAfter: button, 
 	      onChange: this.handleChange, 
 	      type: "text", 
-	      placeholder: "Add a factor", 
+	      placeholder: "Add a talking point", 
 	      value: this.state.value}); 
 	    return (
 	      React.createElement("form", {onSubmit: this.handleSubmit}, 
@@ -43982,54 +44211,89 @@
 	    );
 	  }
 	});
-	module.exports = AddFactor;
+	module.exports = AddTalkingPoint;
 
 
 /***/ },
-/* 334 */
+/* 336 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(14);
 	var Bootstrap = __webpack_require__(170);
 	var ListGroup = Bootstrap.ListGroup;
-	var ListGroupItem = Bootstrap.ListGroupItem;
-	var FactorList = React.createClass({displayName: "FactorList",
+	var TalkingPointListItem = __webpack_require__(337);
+	var TalkingPointList = React.createClass({displayName: "TalkingPointList",
 	  render: function() {
-	    var makeFactor = function(item, i) {
-	      return React.createElement(ListGroupItem, {key: i}, item);
+	    var makeTalkingPoint = function(id, i) {
+	      return React.createElement(TalkingPointListItem, {key: id, id: id});
 	    };
 	    return (
 	      React.createElement(ListGroup, null, 
-		this.props.factors.map(makeFactor)
+		this.props.talkingPoints.map(makeTalkingPoint)
 	      )
 	    );
 	  }
 	});
-	module.exports = FactorList;
+	module.exports = TalkingPointList;
 
 
 /***/ },
-/* 335 */
+/* 337 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var chatActions = __webpack_require__(331);
-	var factorActions = __webpack_require__(316);
+	var React = __webpack_require__(14);
+	var Bootstrap = __webpack_require__(170);
+	var ListGroupItem = Bootstrap.ListGroupItem;
+	var talkingPointStore = __webpack_require__(325);
+	var talkingPointActions = __webpack_require__(316);
+	var TalkingPointListItem = React.createClass({displayName: "TalkingPointListItem",
+	  handleClick: function(e) {
+	    talkingPointActions.removeTalkingPoint(this.props.id);
+	  },
+	  render: function() {
+	    var id = this.props.id;
+	    var text = talkingPointStore.getTalkingPointContent(id);
+	    var active = talkingPointStore.idIsHighlighted(id);
+	    var buttonProps = {
+	      className: 'pull-right',
+	      bsStyle: 'link',
+	      bsSize: 'xsmall',
+	      style: {color: 'grey'},
+	      onClick: this.handleClick
+	    };
+	    var button = (
+	      React.createElement(Bootstrap.Button, React.__spread({},  buttonProps), 
+		React.createElement(Bootstrap.Glyphicon, {glyph: "trash"})
+	      )
+	    );
+	    return React.createElement(ListGroupItem, {active: active}, text, button);
+	  }
+	});
+	module.exports = TalkingPointListItem;
+
+
+/***/ },
+/* 338 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var chatActions = __webpack_require__(333);
+	var talkingPointActions = __webpack_require__(316);
 	var demoMessages = [
 	  'This is a fake chatroom. Have fun talking to yourself.',
-	  'The factors to the right can be referenced during the conversation. ' +
-	    'Just type a # and then type some keywords to search over them.',
+	  'The talking points to the right can be referenced during the conversation. ' +
+	    'Just type a # and then type some keywords to search over them: #dough-too-sticky',
 	  'Also, you can select text in the conversation and right-click to add a ' +
-	    'new factor.'
+	    'new talking point.'
 	];
-	var demoFactors = [
-	  'My finger hurts',
-	  'I\'m no good at cooking',
-	  'My toe hurts',
-	  'Burnt mouth on pizza'
+	var demoTalkingPoints = [
+	  'Burnt my tongue',
+	  'Dough too sticky',
+	  'Sauce too sweet',
+	  'Pizza contains gluten'
 	];
 
 	demoMessages.map(chatActions.sendMessage);
-	demoFactors.map(factorActions.addFactor);
+	demoTalkingPoints.map(talkingPointActions.addTalkingPoint);
 
 
 /***/ }
