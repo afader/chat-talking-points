@@ -3,7 +3,8 @@ var talkingPointActions = require('./actions/talkingPointActions.js');
 var demoMessages = [
   'This is a fake chatroom. Have fun talking to yourself.',
   'The talking points to the right can be referenced during the conversation. ' +
-    'Just type a # and then type some keywords to search over them: #dough-too-sticky',
+  'Like #dough-too-sticky. A textcomplete box will appear when you type # and ' +
+  'will do a keyword search over the talking points contents.',
   'Also, you can select text in the conversation and right-click to add a ' +
     'new talking point.'
 ];
