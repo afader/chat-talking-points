@@ -13,6 +13,18 @@ var talkingPointActions = {
       actionType: appConstants.REMOVE_TALKING_POINT,
       data: index
     });
+  },
+  highlightTalkingPoint: function(index) {
+    AppDispatcher.handleAction({
+      actionType: appConstants.HIGHLIGHT_TALKING_POINT,
+      data: index
+    });
+  },
+  clearTalkingPointHighlight: function() {
+    AppDispatcher.handleAction({
+      actionType: appConstants.CLEAR_TALKING_POINT_HIGHLIGHT,
+      data: null
+    });
   }
 };
 

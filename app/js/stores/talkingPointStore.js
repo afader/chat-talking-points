@@ -9,7 +9,8 @@ var numIdTokens = 5;
 var _store = {
   talkingPoints: [],
   index: invertedIndex.createIndex(),
-  talkingPointIds: []
+  talkingPointIds: [],
+  highlightedIndex: null
 };
 
 var formId = function(prefix, suffix) {
@@ -45,6 +46,14 @@ var removeTalkingPoint = function(index) {
   _store.talkingPointIds.splice(index, 1);
 };
 
+var highlightTalkingPoint = function(index) {
+  _store.highlightedIndex = index;
+};
+
+var clearTalkingPointHighlight = function() {
+  _store.highlightedIndex = null;
+};
+
 var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
   addChangeListener: function(cb) {
     this.on(appConstants.CHANGE_EVENT, cb);
@@ -60,7 +69,16 @@ var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
   },
   getTalkingPointIds: function() {
     return _store.talkingPointIds;
-  }
+  },
+  indexIsHighlighted: function(index) {
+    return index != null && _store.highlightedIndex == index;
+  },
+  hasTalkingPointWithId: function(id) {
+    return this.indexForId(id) >= 0;
+  },
+  indexForId: function(id) {
+    return _store.talkingPointIds.indexOf(id);
+  },
 });
 
 AppDispatcher.register(function(payload) {
@@ -72,6 +90,14 @@ AppDispatcher.register(function(payload) {
       break;
     case appConstants.REMOVE_TALKING_POINT:
       removeTalkingPoint(action.data);
+      talkingPointStore.emit(appConstants.CHANGE_EVENT);
+      break;
+    case appConstants.HIGHLIGHT_TALKING_POINT:
+      highlightTalkingPoint(action.data);
+      talkingPointStore.emit(appConstants.CHANGE_EVENT);
+      break;
+    case appConstants.CLEAR_TALKING_POINT_HIGHLIGHT:
+      clearTalkingPointHighlight();
       talkingPointStore.emit(appConstants.CHANGE_EVENT);
       break;
     default:

@@ -1,5 +1,5 @@
 var React = require('react');
-var Bootstrap = require('react-bootstrap');
+var TalkingPointRef = require('./TalkingPointRef.js');
 var chatMessageParser = require('../chatMessageParser.js');
 var ChatMessage = React.createClass({
   renderMessagePart: function(part, key) {
@@ -9,7 +9,7 @@ var ChatMessage = React.createClass({
       case chatMessageParser.partTypes.BREAK:
 	return <br key={key}/>;
       case chatMessageParser.partTypes.TALKING_POINT:
-	return <b key={key}>#{part.id}</b>;
+	return <TalkingPointRef id={part.id} key={key}/>;
       default:
 	throw 'Unknown message part type: ' + part.type;
     };
