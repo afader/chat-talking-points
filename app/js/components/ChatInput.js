@@ -1,6 +1,6 @@
 var React = require('react');
 var Bootstrap = require('react-bootstrap');
-var factorTextcomplete = require('../factorTextcomplete.js');
+var talkingPointTextcomplete = require('../talkingPointTextcomplete.js');
 var Button = Bootstrap.Button;
 var Input = Bootstrap.Input;
 var ChatInput = React.createClass({
@@ -39,7 +39,7 @@ var ChatInput = React.createClass({
     this.preventSubmit = false;
     var node = this.getDOMNode();
     var $input = $(node).find('textarea');
-    factorTextcomplete($input);
+    talkingPointTextcomplete($input);
     $input.on('textComplete:select', this.textcompleteSelect);
   },
   render: function() {

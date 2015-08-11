@@ -1,18 +1,18 @@
 var chatActions = require('./actions/chatActions.js');
-var factorActions = require('./actions/factorActions.js');
+var talkingPointActions = require('./actions/talkingPointActions.js');
 var demoMessages = [
   'This is a fake chatroom. Have fun talking to yourself.',
-  'The factors to the right can be referenced during the conversation. ' +
-    'Just type a # and then type some keywords to search over them.',
+  'The talking points to the right can be referenced during the conversation. ' +
+    'Just type a # and then type some keywords to search over them: #dough-too-sticky',
   'Also, you can select text in the conversation and right-click to add a ' +
-    'new factor.'
+    'new talking point.'
 ];
-var demoFactors = [
-  'My finger hurts',
-  'I\'m no good at cooking',
-  'My toe hurts',
-  'Burnt mouth on pizza'
+var demoTalkingPoints = [
+  'Burnt my tongue',
+  'Dough too sticky',
+  'Sauce too sweet',
+  'Pizza contains gluten'
 ];
 
 demoMessages.map(chatActions.sendMessage);
-demoFactors.map(factorActions.addFactor);
+demoTalkingPoints.map(talkingPointActions.addTalkingPoint);

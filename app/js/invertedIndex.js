@@ -70,4 +70,7 @@ var createIndex = function() {
   };
 };
 
-module.exports = createIndex;
+module.exports = {
+  createIndex: createIndex,
+  tokenize: tokenize
+}

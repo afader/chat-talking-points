@@ -1,20 +1,23 @@
 var React = require('react');
-var Bootstrap = require('react-bootstrap');
+var TalkingPointRef = require('./TalkingPointRef.js');
+var chatMessageParser = require('../chatMessageParser.js');
 var ChatMessage = React.createClass({
-  newlinesToBreaks: function(string) {
-    var lines = string.split("\n");
-    var elements = [];
-    lines.map(function(line, i) {
-      if (i > 0) {
-	elements.push(<br key={i}/>);
-      } 
-      elements.push(line);
-    });
-    return elements;
+  renderMessagePart: function(part, key) {
+    switch(part.type) {
+      case chatMessageParser.partTypes.PLAIN:
+	return part.content;
+      case chatMessageParser.partTypes.BREAK:
+	return <br key={key}/>;
+      case chatMessageParser.partTypes.TALKING_POINT:
+	return <TalkingPointRef id={part.id} key={key}/>;
+      default:
+	throw 'Unknown message part type: ' + part.type;
+    };
   },
   render: function() {
     var message = this.props.message;
-    var elements = this.newlinesToBreaks(message);
+    var messageParts = chatMessageParser.parse(message);
+    var elements = messageParts.map(this.renderMessagePart);
     return <div className='chatMessage img-rounded'>{elements}</div>;
   }
 });

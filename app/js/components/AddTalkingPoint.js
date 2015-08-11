@@ -2,7 +2,7 @@ var React = require('react');
 var Bootstrap = require('react-bootstrap');
 var Button = Bootstrap.Button;
 var Input = Bootstrap.Input;
-var AddFactor = React.createClass({
+var AddTalkingPoint = React.createClass({
   getInitialState: function() {
     return {value: ''};
   },
@@ -20,7 +20,7 @@ var AddFactor = React.createClass({
       buttonAfter={button}
       onChange={this.handleChange}
       type='text'
-      placeholder='Add a factor'
+      placeholder='Add a talking point'
       value={this.state.value}/>; 
     return (
       <form onSubmit={this.handleSubmit}>
@@ -29,4 +29,4 @@ var AddFactor = React.createClass({
     );
   }
 });
-module.exports = AddFactor;
+module.exports = AddTalkingPoint;
