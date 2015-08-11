@@ -1,6 +1,6 @@
 # chat-talking-points
 
-[Demo](http://afader.github.io/chat-talking-points/)
+## [Click here for a demo](http://afader.github.io/chat-talking-points/)
 
 This is a project to play with some ideas for a chat room interface. The chat
 interface is augmented with talking points. Talking points are issues that can
