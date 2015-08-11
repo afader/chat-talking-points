@@ -1,5 +1,5 @@
 {
-  "name": "cheeseburger-textcomplete",
+  "name": "chat-talking-points",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,9 +13,9 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/afader/cheeseburger-textcomplete/issues"
+    "url": "https://github.com/afader/chat-talking-points/issues"
   },
-  "homepage": "https://github.com/afader/cheeseburger-textcomplete#readme",
+  "homepage": "https://github.com/afader/chat-talking-points#readme",
   "devDependencies": {
     "css-loader": "^0.15.6",
     "del": "^1.2.0",

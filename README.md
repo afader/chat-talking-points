@@ -1,13 +1,18 @@
-# cheeseburger-textcomplete
+# chat-talking-points
 
-[Demo](http://afader.github.io/cheeseburger-textcomplete/)
+[Demo](http://afader.github.io/chat-talking-points/)
 
-This is a project to play with some ideas for cheeseburger un-therapy. It's also a playground for me to learn how to become a better javascript developer.
+This is a project to play with some ideas for a chat room interface. The chat
+interface is augmented with talking points. Talking points are issues that can
+be referenced during the conversation. Users in the chat room can reference 
+the talking points a la github issues in pull request discussions.
+
+(This is also a project for me to learn about javascript development.)
 
 To run locally:
     
-    git clone http://afader.github.io/cheeseburger-textcomplete
-    cd cheeseburger-textcomplete
+    git clone https://github.com/afader/chat-talking-points
+    cd chat-talking-points
     npm install
     gulp
     
