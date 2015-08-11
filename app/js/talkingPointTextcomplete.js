@@ -10,7 +10,9 @@ var strategy = {
     return talkingPointStore.getTalkingPoints()[value];
   },
   replace: function(value) {
-    return '#' + value + ' ';
+    var names = talkingPointStore.getTalkingPointIds();
+    var name = names[value];
+    return '#' + name + ' ';
   },
   index: 1
 };

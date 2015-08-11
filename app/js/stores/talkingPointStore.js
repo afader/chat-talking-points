@@ -2,22 +2,47 @@ var objectAssign = require('react/lib/Object.assign');
 var EventEmitter = require('events').EventEmitter;
 var AppDispatcher = require('../dispatcher/AppDispatcher.js');
 var appConstants = require('../constants/appConstants.js');
-var InvertedIndex = require('../InvertedIndex.js');
+var invertedIndex = require('../invertedIndex.js');
+
+var numIdTokens = 5;
 
 var _store = {
   talkingPoints: [],
-  index: new InvertedIndex()
+  index: invertedIndex.createIndex(),
+  talkingPointIds: []
+};
+
+var formId = function(prefix, suffix) {
+  return suffix ? prefix + '-' + suffix : prefix;
+};
+
+var idExists = function(prefix, suffix) {
+  var id = formId(prefix, suffix);
+  return _store.talkingPointIds.indexOf(id) >= 0;
+};
+
+var createTalkingPointId = function(string) {
+  var tokens = invertedIndex.tokenize(string.toLowerCase());
+  var idPrefix = tokens.slice(0, numIdTokens).join('-');
+  var idSuffix = null;
+  while (idExists(idPrefix, idSuffix)) {
+    idSuffix += 1;
+  }
+  return formId(idPrefix, idSuffix);
 };
 
 var addTalkingPoint = function(talkingPoint) {
   var index = _store.talkingPoints.length;
+  var id = createTalkingPointId(talkingPoint);
   _store.talkingPoints.push(talkingPoint);
+  _store.talkingPointIds[index] = id;
   _store.index.addDocument(index, talkingPoint);
 };
 
 var removeTalkingPoint = function(index) {
   _store.talkingPoints.splice(index, 1);
   _store.index.removeDocument(index);
+  _store.talkingPointIds.splice(index, 1);
 };
 
 var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
@@ -32,6 +57,9 @@ var talkingPointStore = objectAssign({}, EventEmitter.prototype, {
   },
   talkingPointsStartingWith: function(prefix) {
     return _store.index.prefixSearch(prefix);
+  },
+  getTalkingPointIds: function() {
+    return _store.talkingPointIds;
   }
 });
 

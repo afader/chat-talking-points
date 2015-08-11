@@ -8,10 +8,10 @@ var demoMessages = [
     'new talking point.'
 ];
 var demoTalkingPoints = [
-  'My finger hurts',
-  'I\'m no good at cooking',
-  'My toe hurts',
-  'Burnt mouth on pizza'
+  'Burnt my tongue',
+  'Dough too sticky',
+  'Sauce too sweet',
+  'Pizza contains gluten'
 ];
 
 demoMessages.map(chatActions.sendMessage);
