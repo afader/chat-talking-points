@@ -13,7 +13,7 @@ var config = {
   buildDir: 'build',
   entry: './app/js/main.js',
   bundle: 'app.js',
-  title: 'cheeseburger-textcomplete demo'
+  title: 'chat talking points'
 }
 
 var webpackConfig = {
